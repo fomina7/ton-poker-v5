@@ -2,8 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-npx drizzle-kit generate 2>/dev/null || true
-npx drizzle-kit migrate
+node migrate.mjs
 echo "Migrations complete."
 
 echo "Starting server..."

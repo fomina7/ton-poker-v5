@@ -25,17 +25,19 @@ RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
 WORKDIR /app
 
-# Copy package files and install ALL deps (need drizzle-kit for migrations)
+# Copy package files and install production deps only
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod
 
 # Copy built files from build stage
 COPY --from=base /app/dist ./dist
 
-# Copy drizzle migrations and config
-COPY --from=base /app/drizzle ./drizzle
-COPY --from=base /app/drizzle.config.ts ./drizzle.config.ts
+# Copy drizzle SQL migration files
+COPY --from=base /app/drizzle/*.sql ./drizzle/
+
+# Copy migration script
+COPY migrate.mjs ./migrate.mjs
 
 # Copy startup script
 COPY start.sh ./start.sh
