@@ -19,7 +19,7 @@
 
 ## Game Table - Premium Design
 - [x] Premium casino-quality table design (green felt, gold accents)
-- [ ] AI-generated assets (chips, cards, table, buttons)
+- [x] AI-generated assets (chips, cards, table, buttons)
 - [x] Card dealing animations
 - [ ] Chip movement animations
 - [x] Win/loss effects (showdown overlay)
@@ -36,7 +36,7 @@
 - [x] Table management on server (GameManager)
 - [ ] Player queue system
 - [x] Auto-reconnect on disconnect (60s grace period)
-- [ ] Game state recovery after disconnect
+- [x] Game state recovery after disconnect (reconnection logic)
 
 ## Cashier / Payments
 - [x] Deposit page with amount input and request system
@@ -86,5 +86,11 @@
 - [x] Multiplayer must work via WebSocket
 - [x] Admin panel must be built and accessible
 - [x] Design must be premium casino quality (dark theme, gold accents)
-- [ ] All images must be custom AI-generated (no emojis, no placeholders)
+- [x] All images must be custom AI-generated (no emojis, no placeholders)
 - [x] Game must be actually playable end-to-end
+
+## Asset Quality Fix
+- [x] Regenerate all poker assets with transparent backgrounds (no white bg)
+- [x] Replace white-background images with clean transparent PNG assets
+- [x] Update assets.ts with new CDN URLs
+- [x] Verify all assets display correctly on dark background

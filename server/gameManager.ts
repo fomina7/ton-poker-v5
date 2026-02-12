@@ -122,12 +122,6 @@ class GameManager {
       return;
     }
 
-    // Check balance
-    if (user.balanceReal < tableConfig.minBuyIn) {
-      socket.emit("error", { message: "Insufficient balance. Minimum buy-in: " + tableConfig.minBuyIn });
-      return;
-    }
-
     const maxSeats = parseInt(tableConfig.tableSize);
     let room = this.tables.get(data.tableId);
 
@@ -160,6 +154,27 @@ class GameManager {
         botTimers: new Map(),
       };
       this.tables.set(data.tableId, room);
+    }
+
+    // Check if user is already at this table (reconnection)
+    const existingPlayer = room.state.players.find(p => p.oddsUserId === data.userId && !p.isBot);
+    if (existingPlayer) {
+      // Reconnect: update socket references
+      existingPlayer.disconnected = false;
+      room.sockets.set(existingPlayer.seatIndex, socket.id);
+      room.userSockets.set(data.userId, socket.id);
+      socket.join(`table_${data.tableId}`);
+      (socket as any).__tableId = data.tableId;
+      (socket as any).__seatIndex = existingPlayer.seatIndex;
+      (socket as any).__userId = data.userId;
+      this.broadcastState(data.tableId);
+      return;
+    }
+
+    // Check balance for new join
+    if (user.balanceReal < tableConfig.minBuyIn) {
+      socket.emit("error", { message: "Insufficient balance. Minimum buy-in: " + tableConfig.minBuyIn });
+      return;
     }
 
     // Find seat
@@ -250,16 +265,33 @@ class GameManager {
     const botsNeeded = Math.max(0, Math.min(3, maxSeats) - currentCount);
     const occupiedSeats = room.state.players.map(p => p.seatIndex);
 
+    // Distribute bots evenly around the table
+    // Find the hero seat (first human player)
+    const heroSeat = room.state.players.find(p => !p.isBot)?.seatIndex ?? 0;
+    // Preferred bot positions: spread evenly around the table relative to hero
+    const preferredOffsets = maxSeats <= 2 ? [1] : maxSeats <= 6 ? [2, 4, 3, 5, 1] : [3, 6, 1, 5, 2, 7, 4, 8];
+    const preferredSeats = preferredOffsets.map(off => (heroSeat + off) % maxSeats);
+
     for (let i = 0; i < botsNeeded; i++) {
       let seatIndex = -1;
-      for (let s = 0; s < maxSeats; s++) {
-        if (!occupiedSeats.includes(s)) {
-          seatIndex = s;
-          occupiedSeats.push(s);
+      // Try preferred seats first
+      for (const ps of preferredSeats) {
+        if (!occupiedSeats.includes(ps)) {
+          seatIndex = ps;
           break;
         }
       }
+      // Fallback: any available seat
+      if (seatIndex === -1) {
+        for (let s = 0; s < maxSeats; s++) {
+          if (!occupiedSeats.includes(s)) {
+            seatIndex = s;
+            break;
+          }
+        }
+      }
       if (seatIndex === -1) break;
+      occupiedSeats.push(seatIndex);
 
       const botIdx = (currentCount + i) % BOT_NAMES.length;
       const difficulties: Array<"beginner" | "medium" | "pro"> = ["beginner", "medium", "pro"];

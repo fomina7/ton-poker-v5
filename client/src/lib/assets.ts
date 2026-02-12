@@ -1,79 +1,122 @@
-// HOUSE POKER — All CDN assets
+/**
+ * HOUSE POKER — Premium AI-Generated Assets (Transparent PNG)
+ * All assets have transparent backgrounds, hosted on CDN
+ */
 export const ASSETS = {
-  // Table & backgrounds
-  table: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/AMghKjypuLRFfcIy.png',
-  gameBg: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/DXxgzALXhrNyKTKu.png',
-  lobbyBg: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/EVjTcVHbeDnNZyXv.png',
-  cardBack: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/KINfUmFJgtGBBrOM.png',
-  dealerBtn: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/zkFbaAodHqQVYYNH.png',
+  // Table & backgrounds (these can keep backgrounds)
+  table: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/eJydrJzXsTPndxmn.png',
+  tableSide: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/nPaTuqFMzXMjGWQM.png',
+  gameBg: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/yNWBvzmdfDuqROTH.png',
+  lobbyBg: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/rloYrgdWiXUMUXGj.png',
+  cardBack: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/GmKyWpsLweNkizWZ.png',
+  dealerBtn: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/HIpNZPoYommKpOYx.png',
+  sbBtn: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/jgMKFTVigoolOkbj.png',
+  bbBtn: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/nUEiPGtUglFziIrs.png',
   logo: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/HLoEgsMwPssQEdEq.png',
   logoAlt: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/nxoljfQNRAlVkYPj.png',
 
-  // Chips
+  // Chips — NEW transparent background versions
   chips: {
-    gold: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/OeYXoBnVYDgYxZvG.png',
-    red: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/SNvKozjZFOiBovoo.png',
-    blue: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/hpPUbJMyMWaxJBUq.png',
-    green: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/nmAfYDDrgnEyOecI.png',
-    black: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/lbCcIhHsVwOeumdy.png',
+    gold: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/NxCLjOdzoojFcfbe.png',
+    red: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/yllJubRYpmGGWjHx.png',
+    blue: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/yUzxzWsylgAptTcF.png',
+    green: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/apVRmihCecNgDIil.png',
+    black: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/eitGMBgWttGicajA.png',
+    purple: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/cpQXmYxpdTfXBFHv.png',
+    platinum: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/sVtFHYBTAlpTdCBP.png',
+    stack: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/EJPGwUrDOHJctrNC.png',
   },
 
-  // UI icons (AI-generated, transparent bg)
+  // Showcase cards (keep originals)
+  cards: {
+    aceSpades: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/QhljnZOMpNvirFth.png',
+    kingHearts: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/euvQDyrTarOOXHlV.png',
+    queenDiamonds: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/zSnqUSYPBMiFvuoc.png',
+    jackClubs: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/XmbvKIfKhEgwwcTg.png',
+  },
+
+  // UI icons — NEW transparent background versions
   ui: {
-    coin: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/qkovZJxUcAwdDRtp.png',
-    gem: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/jDRhUwfGhtUNoGCR.png',
-    trophy: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/AWgUVQIcKzBRtswK.png',
-    crown: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/sEZIzNlFJWAEKdhD.png',
-    lootbox: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/BLJCRdtvxBUWfvxY.png',
+    coin: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/DcQkFSHuVteukXdy.png',
+    gem: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/npxPuoTUSIPoOuPk.png',
+    trophy: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/MmrBjRJofBkHTgxt.png',
+    crown: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/pNVwRWLCvSLUSXgs.png',
+    diamond: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/ODmqkHJPAlEArtFH.png',
+    timer: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/mmWjTDvwWgjlnqkg.png',
+    chat: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/DsydwzrTkwINiueo.png',
+    settings: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/KPwuEMJIaGJkiOPk.png',
+    deposit: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/sVZZIMFPcoiNDllk.png',
+    withdraw: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/zfOdykaKAVMyfXlh.png',
+    wallet: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/rEGAdQASVWOGVgbP.png',
+    profile: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/MfLImgxlGOMtpzAP.png',
+    vip: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/pkgmPgVIeNVrsXni.png',
+    tournamentTrophy: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/AUkpcoDQQRoclJQp.png',
+    lootbox: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/iELvUicCMRSjiARb.png',
   },
 
-  // Navigation icons (AI-generated)
+  // Navigation icons — NEW transparent background versions
   nav: {
-    lobby: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/gxCUKqEhmFNwFODz.png',
-    profile: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/OQjMatKzJzbgIAgG.png',
-    tournaments: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/ZtidLHkIoEoRJBRg.png',
-    cashier: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/FdwMwNepibEYApuU.png',
-    settings: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/tMnvbzrxzSfxWTfE.png',
-    chat: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/lAACrYKWhYvDALZQ.png',
+    lobby: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/BVbCAWhmmJreAOLq.png',
+    profile: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/SSAyFHsbcIhENAzk.png',
+    tournaments: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/oUZILzCirBWnhxXx.png',
+    cashier: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/msJODvWSYZtySpCh.png',
+    settings: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/GPpEVVnXpEBlCjZM.png',
+    chat: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/LIYlVruPUyRysGlw.png',
   },
 
-  // Game mode icons
+  // Game mode icons — NEW transparent background versions
   modes: {
-    holdem: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/FizPqItJkyGRBhmJ.png',
-    omaha: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/cavBSHLXKUdzjNGr.png',
-    fastfold: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/KXXHtHyYzYUnCYYV.png',
+    holdem: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/QcebQSlgQrdfsMMv.png',
+    omaha: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/ZfncnIfQPVyCXWxC.png',
+    fastfold: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/VtVCMvVcrcyzUgwU.png',
   },
 
-  // Cashier icons
+  // Cashier icons — NEW transparent background versions
   cashierIcons: {
-    deposit: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/MMmorRxJIEtPyexQ.png',
-    withdraw: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/NyksXFhRMHmhdTLw.png',
-    history: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/TYjGNhBiRjIRUTWB.png',
-    leaderboard: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/uFGdMJYIdyjKPWHT.png',
-    bonus: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/OrOYLZQwFgKWfhSD.png',
+    deposit: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/ysxYrlbWYePxOjLI.png',
+    withdraw: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/sOLdvdojoiWNOWjk.png',
+    history: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/wVzktqQrYuBCnGFh.png',
+    leaderboard: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/dgloGNDyNdTtVaWV.png',
+    bonus: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/zOXflLTvGViApGOv.png',
   },
 
-  // Action button icons
+  // Action button icons — NEW transparent background versions
   actions: {
-    fold: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/XHBAsHMxtVUyoFrB.png',
-    call: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/IyMiNbXSFQysUHOk.png',
-    raise: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/aditMDrWMWUZncSd.png',
-    check: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/FxtTxZstRHznMgDl.png',
-    allin: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/WiHZPnenRFoMSdrx.png',
+    fold: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/cPggbSejkJftyURn.png',
+    call: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/CoPgcvGmOIgvIwRb.png',
+    raise: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/rewGUWXMUCMnjQYZ.png',
+    check: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/qMUYBIugFlXzdBKh.png',
+    allin: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/KFKPjEnjoapTELum.png',
+    bet: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/UmRgtLilgIDfTEYS.png',
   },
 
-  // Avatars
+  // Hand rankings (keep originals)
+  hands: {
+    royalFlush: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/QDnYBjsUDJDhlIbA.png',
+    fullHouse: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/WnVUPPvzHEONcMsv.png',
+  },
+
+  // Effects (keep originals)
+  effects: {
+    win: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/rvIEZnETAJTZTpKn.png',
+    lose: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/vWNhzUPdvfDbEpUO.png',
+  },
+
+  // Avatars — NEW transparent background versions
   avatars: {
-    fox: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/ZXVgoVBnaGWTdBpA.png',
-    shark: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/FpeUSrnFoZnRZGTJ.png',
-    owl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/XKAtsYjYeUrpYXGB.png',
-    cat: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/oaVDgFqlzeJnZXRb.png',
-    bear: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/hiGFoFAZwxbmEqUq.png',
-    monkey: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/yaUaOFMxFINVZTMf.png',
-    wolf: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/KFgHpHCxeiLwzNMK.png',
+    fox: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/hgROMPmoYvuawdQF.png',
+    shark: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/SnDZgDLVmlTDcDNj.png',
+    owl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/BaQRxdLbTwoyskcw.png',
+    cat: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/nWrCHQRJLZkcLvju.png',
+    bear: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/SwlBFiGaUzEdvOwC.png',
+    monkey: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/fKrgvWjGHhKoDIyA.png',
+    wolf: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/DVaUqcGzaSArmZMR.png',
     penguin: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/wXzTgbjNbMLqgWZp.png',
     flamingo: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/wrIuKUnyHMQYnFjy.png',
     koala: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/oAfRKfzoWQBFSpTZ.png',
+    eagle: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/jTbOTXPmjScICRVN.png',
+    lion: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/jKoiZVrDrQjAXTJA.png',
+    dragon: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/GWGkdEvkWkalgWMi.png',
   },
 } as const;
 
@@ -83,27 +126,41 @@ export const AVATAR_LIST = Object.entries(ASSETS.avatars).map(([key, url]) => ({
   url,
 }));
 
-export const SUITS = ['hearts', 'diamonds', 'clubs', 'spades'] as const;
-export const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] as const;
+// Chip denominations for visual display
+export const CHIP_VALUES = [
+  { value: 1, img: ASSETS.chips.gold, color: '#D4AF37' },
+  { value: 5, img: ASSETS.chips.red, color: '#DC2626' },
+  { value: 10, img: ASSETS.chips.blue, color: '#2563EB' },
+  { value: 25, img: ASSETS.chips.green, color: '#16A34A' },
+  { value: 100, img: ASSETS.chips.black, color: '#1F2937' },
+  { value: 500, img: ASSETS.chips.purple, color: '#7C3AED' },
+  { value: 1000, img: ASSETS.chips.platinum, color: '#94A3B8' },
+];
 
-export type Suit = typeof SUITS[number];
-export type Rank = typeof RANKS[number];
+// Card types
+export type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
+export type Rank = '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K' | 'A';
 
 export interface Card {
   suit: Suit;
   rank: Rank;
 }
 
-export const SUIT_SYMBOLS: Record<Suit, string> = {
-  hearts: '♥',
-  diamonds: '♦',
-  clubs: '♣',
-  spades: '♠',
+export const SUITS: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
+export const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+// Card suit symbols and colors
+export const SUIT_SYMBOLS: Record<string, string> = {
+  hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠',
+  h: '♥', d: '♦', c: '♣', s: '♠',
 };
 
-export const SUIT_COLORS: Record<Suit, string> = {
-  hearts: '#E53935',
-  diamonds: '#E53935',
-  clubs: '#1a1a2e',
-  spades: '#1a1a2e',
+export const SUIT_COLORS: Record<string, string> = {
+  hearts: '#dc2626', diamonds: '#dc2626', clubs: '#1a1a2e', spades: '#1a1a2e',
+  h: '#dc2626', d: '#dc2626', c: '#1a1a2e', s: '#1a1a2e',
+};
+
+export const RANK_DISPLAY: Record<string, string> = {
+  '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8',
+  '9': '9', '10': '10', 'T': '10', 'J': 'J', 'Q': 'Q', 'K': 'K', 'A': 'A',
 };
