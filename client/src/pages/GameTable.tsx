@@ -1,12 +1,12 @@
 /**
- * GameTable — HOUSE POKER
- * Premium casino-quality poker table with WebSocket multiplayer
- * Fixed: player positioning, hero cards, pre-action buttons
+ * GameTable — HOUSE POKER Premium Club
+ * Ultra-premium poker table with dark/gold aesthetic.
+ * Mobile-first responsive design.
  */
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useParams } from 'wouter';
-import { ArrowLeft, Clock, Users, Wifi, WifiOff, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Wifi, WifiOff } from 'lucide-react';
 import { useSocket, ServerPlayer } from '@/hooks/useSocket';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
@@ -14,23 +14,21 @@ import { ASSETS, SUIT_SYMBOLS, CHIP_VALUES } from '@/lib/assets';
 import type { Card } from '@/lib/assets';
 import { toast } from 'sonner';
 
-/* ─── Seat positions (percentage-based for responsive) ─── */
-// Seats are arranged around the oval table. Index 0 = hero (always bottom center).
-// Other seats are evenly distributed clockwise.
+/* ─── Seat positions (percentage-based, mobile-optimized) ─── */
 const SEATS_6 = [
-  { x: 50, y: 90 },   // 0: hero (bottom center)
-  { x: 6,  y: 65 },   // 1: left-bottom
-  { x: 6,  y: 25 },   // 2: left-top
+  { x: 50, y: 88 },   // 0: hero (bottom center)
+  { x: 8,  y: 62 },   // 1: left-bottom
+  { x: 8,  y: 28 },   // 2: left-top
   { x: 50, y: 4 },    // 3: top center
-  { x: 94, y: 25 },   // 4: right-top
-  { x: 94, y: 65 },   // 5: right-bottom
+  { x: 92, y: 28 },   // 4: right-top
+  { x: 92, y: 62 },   // 5: right-bottom
 ];
 const SEATS_9 = [
-  { x: 50, y: 90 }, { x: 10, y: 76 }, { x: 3, y: 48 },
+  { x: 50, y: 88 }, { x: 10, y: 74 }, { x: 6, y: 46 },
   { x: 10, y: 18 }, { x: 34, y: 4 },  { x: 66, y: 4 },
-  { x: 90, y: 18 }, { x: 97, y: 48 }, { x: 90, y: 76 },
+  { x: 90, y: 18 }, { x: 94, y: 46 }, { x: 90, y: 74 },
 ];
-const SEATS_2 = [{ x: 50, y: 90 }, { x: 50, y: 4 }];
+const SEATS_2 = [{ x: 50, y: 88 }, { x: 50, y: 4 }];
 
 function getSeats(n: number) {
   return n <= 2 ? SEATS_2 : n <= 6 ? SEATS_6 : SEATS_9;
@@ -41,7 +39,7 @@ const PHASE_LABELS: Record<string, string> = {
   turn: 'TURN', river: 'RIVER', showdown: 'SHOWDOWN',
 };
 
-/* ─── Chip stack visual ─── */
+/* ─── Chip Stack Visual ─── */
 function ChipStack({ amount }: { amount: number }) {
   if (amount <= 0) return null;
   const chips: typeof CHIP_VALUES[number][] = [];
@@ -57,14 +55,14 @@ function ChipStack({ amount }: { amount: number }) {
 
   return (
     <div className="flex items-center gap-0.5">
-      <div className="relative" style={{ width: 16, height: 16 + chips.length * 2 }}>
+      <div className="relative" style={{ width: 14, height: 14 + chips.length * 2 }}>
         {chips.slice(0, 4).map((c, i) => (
-          <img key={i} src={c.img} alt="" className="absolute w-4 h-4 rounded-full"
-            style={{ bottom: i * 2, left: 0, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />
+          <img key={i} src={c.img} alt="" className="absolute w-3.5 h-3.5 rounded-full"
+            style={{ bottom: i * 2, left: 0, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))' }} />
         ))}
       </div>
-      <span className="text-[10px] font-bold text-gold ml-1 font-mono-poker">
-        {amount.toLocaleString()}
+      <span className="text-[9px] font-bold text-gold ml-0.5 font-mono-poker">
+        {amount >= 1000 ? `${(amount / 1000).toFixed(1)}k` : amount.toLocaleString()}
       </span>
     </div>
   );
@@ -74,29 +72,34 @@ function ChipStack({ amount }: { amount: number }) {
 function CardView({ card, faceDown = false, size = 'md' }: {
   card: Card; faceDown?: boolean; size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
-  const dims = { sm: { w: 30, h: 44 }, md: { w: 42, h: 60 }, lg: { w: 54, h: 78 }, xl: { w: 68, h: 96 } };
+  const dims = {
+    sm: { w: 26, h: 38 },
+    md: { w: 36, h: 52 },
+    lg: { w: 48, h: 68 },
+    xl: { w: 58, h: 84 },
+  };
   const { w, h } = dims[size];
   const fs = {
-    sm: { rank: 9, suit: 7, center: 13 },
-    md: { rank: 11, suit: 9, center: 17 },
-    lg: { rank: 14, suit: 11, center: 22 },
-    xl: { rank: 18, suit: 14, center: 28 },
+    sm: { rank: 9, suit: 7, center: 11 },
+    md: { rank: 11, suit: 9, center: 15 },
+    lg: { rank: 14, suit: 11, center: 20 },
+    xl: { rank: 16, suit: 13, center: 24 },
   };
 
   if (faceDown) {
     return (
-      <div className="rounded-lg overflow-hidden flex-shrink-0" style={{
+      <div className="rounded-md overflow-hidden flex-shrink-0" style={{
         width: w, height: h,
         background: `url(${ASSETS.cardBack}) center/cover`,
-        border: '1px solid rgba(212, 175, 55, 0.2)',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+        border: '1px solid rgba(212, 175, 55, 0.15)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
       }} />
     );
   }
 
   const suitStr = String(card.suit);
   const isRed = suitStr === 'hearts' || suitStr === 'diamonds' || suitStr === 'h' || suitStr === 'd';
-  const color = isRed ? '#dc2626' : '#1a1a2e';
+  const color = isRed ? '#e53e3e' : '#1a1a2e';
   const symbol = SUIT_SYMBOLS[card.suit] || '?';
   const rankStr = String(card.rank);
   const rank = rankStr === 'T' ? '10' : rankStr;
@@ -106,21 +109,24 @@ function CardView({ card, faceDown = false, size = 'md' }: {
       initial={{ rotateY: 180, opacity: 0 }}
       animate={{ rotateY: 0, opacity: 1 }}
       transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
-      className="rounded-lg flex-shrink-0 relative overflow-hidden"
+      className="rounded-md flex-shrink-0 relative overflow-hidden"
       style={{
         width: w, height: h,
-        background: 'linear-gradient(160deg, #ffffff 0%, #f8f8f8 50%, #efefef 100%)',
-        border: '1px solid rgba(0,0,0,0.12)',
-        boxShadow: '0 3px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.9)',
+        background: 'linear-gradient(160deg, #ffffff 0%, #f9f9f9 40%, #f0f0f0 100%)',
+        border: '1px solid rgba(0,0,0,0.1)',
+        boxShadow: '0 3px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.95)',
       }}
     >
+      {/* Top-left rank + suit */}
       <div className="absolute flex flex-col items-center leading-none" style={{ top: 2, left: 3 }}>
         <span className="font-black" style={{ fontSize: fs[size].rank, color, lineHeight: 1 }}>{rank}</span>
         <span style={{ fontSize: fs[size].suit, color, lineHeight: 1 }}>{symbol}</span>
       </div>
+      {/* Center suit */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span style={{ fontSize: fs[size].center, color, opacity: 0.85 }}>{symbol}</span>
+        <span style={{ fontSize: fs[size].center, color, opacity: 0.8 }}>{symbol}</span>
       </div>
+      {/* Bottom-right rank + suit (inverted) */}
       <div className="absolute flex flex-col items-center leading-none rotate-180" style={{ bottom: 2, right: 3 }}>
         <span className="font-black" style={{ fontSize: fs[size].rank, color, lineHeight: 1 }}>{rank}</span>
         <span style={{ fontSize: fs[size].suit, color, lineHeight: 1 }}>{symbol}</span>
@@ -152,9 +158,9 @@ function SeatView({
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200 }}
     >
-      {/* Hole cards — show above for top players, skip for hero (shown separately) */}
+      {/* Hole cards — show above for top players, skip for hero */}
       {!isHero && isTop && player.holeCards.length > 0 && !player.folded && (
-        <div className="flex gap-0.5 mb-1">
+        <div className="flex gap-0.5 mb-0.5">
           {player.holeCards.map((c, i) => (
             <CardView key={i} card={c as Card} faceDown={!isShowdown} size="sm" />
           ))}
@@ -162,11 +168,11 @@ function SeatView({
       )}
 
       {/* Player container */}
-      <div className={`relative ${player.folded ? 'opacity-30 grayscale' : ''} transition-all duration-300`}>
-        {/* Timer ring for active player */}
+      <div className={`relative ${player.folded ? 'opacity-25 grayscale' : ''} transition-all duration-300`}>
+        {/* Timer ring */}
         {isAction && !player.folded && (
-          <svg className="absolute" viewBox="0 0 52 52" style={{ width: 56, height: 56, left: -6, top: -6 }}>
-            <circle cx="26" cy="26" r="24" fill="none" stroke="rgba(212,175,55,0.12)" strokeWidth="2" />
+          <svg className="absolute" viewBox="0 0 52 52" style={{ width: '130%', height: '130%', left: '-15%', top: '-15%' }}>
+            <circle cx="26" cy="26" r="24" fill="none" stroke="rgba(212,175,55,0.08)" strokeWidth="2" />
             <circle cx="26" cy="26" r="24" fill="none"
               stroke={timerPct > 0.5 ? '#D4AF37' : timerPct > 0.25 ? '#f59e0b' : '#ef4444'}
               strokeWidth="2.5"
@@ -181,56 +187,65 @@ function SeatView({
         {/* Winner glow */}
         {isWinner && (
           <motion.div
-            className="absolute -inset-4 rounded-full"
+            className="absolute -inset-3 rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.5) 0%, transparent 70%)' }}
-            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+            animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
         )}
 
         {/* Avatar */}
-        <div className="w-11 h-11 rounded-full overflow-hidden" style={{
-          border: `2.5px solid ${isWinner ? '#D4AF37' : isAction ? '#D4AF37' : isHero ? 'rgba(0,240,255,0.6)' : 'rgba(255,255,255,0.1)'}`,
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden" style={{
+          border: `2px solid ${
+            isWinner ? '#D4AF37'
+            : isAction ? 'rgba(212,175,55,0.8)'
+            : isHero ? 'rgba(212,175,55,0.4)'
+            : 'rgba(255,255,255,0.08)'
+          }`,
           boxShadow: isWinner
-            ? '0 0 24px rgba(212,175,55,0.6)'
+            ? '0 0 20px rgba(212,175,55,0.6)'
             : isAction
-            ? '0 0 16px rgba(212,175,55,0.4)'
+            ? '0 0 12px rgba(212,175,55,0.3)'
             : '0 2px 8px rgba(0,0,0,0.5)',
         }}>
           <img src={avatarUrl} alt={player.name} className="w-full h-full object-cover" />
         </div>
 
-        {/* Position badges (D, SB, BB) */}
+        {/* Position badges */}
         {isDealer && (
-          <div className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-black"
-            style={{ background: '#D4AF37', color: '#000', boxShadow: '0 2px 6px rgba(212,175,55,0.5)' }}>D</div>
+          <div className="absolute -top-0.5 -right-0.5 z-10 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[5px] font-black"
+            style={{ background: 'linear-gradient(135deg, #D4AF37, #B8941F)', color: '#000', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>D</div>
         )}
         {isSB && !isDealer && (
-          <div className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-black"
-            style={{ background: '#3b82f6', color: '#fff', boxShadow: '0 2px 6px rgba(59,130,246,0.4)' }}>SB</div>
+          <div className="absolute -top-0.5 -right-0.5 z-10 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[5px] font-black"
+            style={{ background: '#3b82f6', color: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>S</div>
         )}
         {isBB && !isDealer && !isSB && (
-          <div className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-black"
-            style={{ background: '#ef4444', color: '#fff', boxShadow: '0 2px 6px rgba(239,68,68,0.4)' }}>BB</div>
+          <div className="absolute -top-0.5 -right-0.5 z-10 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[5px] font-black"
+            style={{ background: '#ef4444', color: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>B</div>
         )}
       </div>
 
-      {/* Name + stack */}
-      <div className="mt-1 text-center px-2 py-0.5 rounded-lg" style={{
-        background: isHero ? 'rgba(0,240,255,0.08)' : 'rgba(0,0,0,0.7)',
+      {/* Name + stack plate */}
+      <div className="mt-0.5 text-center px-1.5 py-0.5 rounded-md" style={{
+        background: isHero
+          ? 'linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04))'
+          : 'rgba(0,0,0,0.75)',
         backdropFilter: 'blur(8px)',
-        border: isHero ? '1px solid rgba(0,240,255,0.15)' : '1px solid rgba(255,255,255,0.04)',
-        minWidth: 64,
+        border: isHero
+          ? '1px solid rgba(212,175,55,0.15)'
+          : '1px solid rgba(255,255,255,0.03)',
+        minWidth: 44,
       }}>
-        <div className={`text-[9px] font-semibold truncate max-w-[72px] ${isHero ? 'text-cyan-neon' : 'text-white'}`}>
-          {isHero ? '★ YOU' : player.name}
+        <div className={`text-[7px] sm:text-[8px] font-semibold truncate max-w-[50px] sm:max-w-[60px] ${isHero ? 'text-gold-light' : 'text-gray-300'}`}>
+          {isHero ? 'YOU' : player.name}
         </div>
-        <div className="text-[9px] font-bold text-gold font-mono-poker">
-          {player.chipStack.toLocaleString()}
+        <div className="text-[7px] sm:text-[8px] font-bold text-gold font-mono-poker">
+          {player.chipStack >= 1000 ? `${(player.chipStack / 1000).toFixed(1)}k` : player.chipStack.toLocaleString()}
         </div>
       </div>
 
-      {/* Current bet chip stack */}
+      {/* Current bet */}
       {player.currentBet > 0 && (
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mt-0.5">
           <ChipStack amount={player.currentBet} />
@@ -240,28 +255,37 @@ function SeatView({
       {/* Last action badge */}
       {player.lastAction && (
         <motion.div
-          initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-          className="mt-0.5 px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-wider"
+          initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }}
+          className="mt-0.5 px-1.5 py-0.5 rounded-full text-[6px] sm:text-[7px] font-black uppercase tracking-wider"
           style={{
             background: player.lastAction.startsWith('WIN')
-              ? 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(212,175,55,0.15))'
-              : player.lastAction === 'fold' ? 'rgba(139,0,0,0.3)'
-              : player.lastAction === 'allin' ? 'rgba(255,107,0,0.3)'
-              : 'rgba(0,240,255,0.12)',
-            color: player.lastAction.startsWith('WIN') ? '#D4AF37'
-              : player.lastAction === 'fold' ? '#ff6b6b'
-              : player.lastAction === 'allin' ? '#ff8c00'
-              : '#00F0FF',
-            border: `1px solid ${player.lastAction.startsWith('WIN') ? 'rgba(212,175,55,0.3)' : 'transparent'}`,
+              ? 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(212,175,55,0.1))'
+              : player.lastAction === 'FOLD'
+              ? 'rgba(255,0,0,0.15)'
+              : player.lastAction === 'ALL IN'
+              ? 'linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,107,0,0.1))'
+              : 'rgba(255,255,255,0.06)',
+            color: player.lastAction.startsWith('WIN')
+              ? '#D4AF37'
+              : player.lastAction === 'FOLD'
+              ? '#f87171'
+              : player.lastAction === 'ALL IN'
+              ? '#fb923c'
+              : '#94a3b8',
+            border: `1px solid ${
+              player.lastAction.startsWith('WIN') ? 'rgba(212,175,55,0.2)'
+              : player.lastAction === 'ALL IN' ? 'rgba(255,107,0,0.2)'
+              : 'rgba(255,255,255,0.05)'
+            }`,
           }}
         >
           {player.lastAction}
         </motion.div>
       )}
 
-      {/* Hole cards — below for non-top, non-hero players */}
+      {/* Hole cards — below for non-top, non-hero */}
       {!isHero && !isTop && player.holeCards.length > 0 && !player.folded && (
-        <div className="flex gap-0.5 mt-1">
+        <div className="flex gap-0.5 mt-0.5">
           {player.holeCards.map((c, i) => (
             <CardView key={i} card={c as Card} faceDown={!isShowdown} size="sm" />
           ))}
@@ -271,19 +295,20 @@ function SeatView({
   );
 }
 
-/* ─── Main GameTable ─── */
+/* ═══════════════════════════════════════════════════════
+   MAIN GAME TABLE COMPONENT
+   ═══════════════════════════════════════════════════════ */
 export default function GameTable() {
   const params = useParams<{ tableId: string }>();
   const tableId = parseInt(params.tableId || '1');
   const [, navigate] = useLocation();
   const { user } = useAuth();
-  const { connected, gameState, error, joinTable, leaveTable, sendAction } = useSocket();
+  const { connected, gameState, mySeatIndex, error, joinTable, leaveTable, sendAction } = useSocket();
 
   const [turnTimer, setTurnTimer] = useState(30);
   const [raiseAmount, setRaiseAmount] = useState(0);
   const [showRaise, setShowRaise] = useState(false);
-  const [preAction, setPreAction] = useState<string | null>(null); // 'check_fold' | 'call_any' | 'fold_to_bet'
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [preAction, setPreAction] = useState<string | null>(null);
 
   const { data: tableConfig } = trpc.tables.get.useQuery({ id: tableId });
 
@@ -298,29 +323,49 @@ export default function GameTable() {
 
   // Timer
   useEffect(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (!gameState || gameState.phase === 'showdown' || gameState.phase === 'waiting') return;
-    if (gameState.actionDeadline > 0) {
-      const tick = () => setTurnTimer(Math.max(0, Math.ceil((gameState.actionDeadline - Date.now()) / 1000)));
-      tick();
-      timerRef.current = setInterval(tick, 500);
+    if (!gameState || gameState.phase === 'showdown' || gameState.phase === 'waiting') {
+      setTurnTimer(30);
+      return;
     }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    if (!gameState.actionDeadline || gameState.actionDeadline <= 0) return;
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((gameState.actionDeadline - Date.now()) / 1000));
+      setTurnTimer(remaining);
+    };
+    tick();
+    const interval = setInterval(tick, 500);
+    return () => clearInterval(interval);
   }, [gameState?.actionSeat, gameState?.phase, gameState?.actionDeadline]);
 
-  // Execute pre-action when it becomes our turn
-  const heroPlayer = gameState?.players.find(p => p.userId === user?.id);
-  const heroSeat = heroPlayer?.seatIndex ?? -1;
-  const isMyTurn = gameState
-    ? gameState.actionSeat === heroSeat && gameState.phase !== 'showdown' && gameState.phase !== 'waiting'
-    : false;
+  // Hero player
+  const heroPlayer = useMemo(() => {
+    if (!gameState) return null;
+    if (mySeatIndex >= 0) {
+      const byIndex = gameState.players.find(p => p.seatIndex === mySeatIndex);
+      if (byIndex) return byIndex;
+    }
+    if (user?.id) {
+      return gameState.players.find(p => p.userId === user.id) || null;
+    }
+    return null;
+  }, [gameState?.players, mySeatIndex, user?.id]);
+
+  const heroSeat = heroPlayer?.seatIndex ?? mySeatIndex;
+
+  // Is it my turn?
+  const isMyTurn = useMemo(() => {
+    if (!gameState || heroSeat < 0) return false;
+    if (gameState.phase === 'showdown' || gameState.phase === 'waiting') return false;
+    return gameState.actionSeat === heroSeat;
+  }, [gameState?.actionSeat, gameState?.phase, heroSeat]);
 
   const callAmount = heroPlayer
-    ? Math.min(heroPlayer.chipStack, (gameState?.currentBet ?? 0) - heroPlayer.currentBet)
+    ? Math.min(heroPlayer.chipStack, Math.max(0, (gameState?.currentBet ?? 0) - heroPlayer.currentBet))
     : 0;
   const canCheck = callAmount === 0;
 
-  // Auto-execute pre-action
+  // Auto pre-action
   useEffect(() => {
     if (!isMyTurn || !preAction || !gameState) return;
     if (preAction === 'check_fold') {
@@ -331,7 +376,6 @@ export default function GameTable() {
       else sendAction(tableId, 'call');
     } else if (preAction === 'fold_to_bet') {
       if (!canCheck) sendAction(tableId, 'fold');
-      // If can check, don't auto-fold — let player decide
     }
     setPreAction(null);
   }, [isMyTurn, preAction]);
@@ -349,14 +393,11 @@ export default function GameTable() {
   const seats = getSeats(tableSize);
   const timerPct = turnTimer / 30;
 
-  // Order players so hero is always at seat position 0 (bottom center)
+  // Order players so hero is at visual position 0
   const orderedPlayers = useMemo((): (ServerPlayer & { vi: number })[] => {
     if (!gameState) return [];
     const ps = [...gameState.players];
-    if (heroSeat === -1) return ps.map((p, i) => ({ ...p, vi: i }));
-
-    // Map each player to a visual index relative to hero
-    // Hero = vi 0, then clockwise around the table
+    if (heroSeat < 0) return ps.map((p, i) => ({ ...p, vi: i }));
     return ps.map(p => ({
       ...p,
       vi: (p.seatIndex - heroSeat + tableSize) % tableSize,
@@ -387,145 +428,140 @@ export default function GameTable() {
     ].filter(p => p.value >= minR && p.value <= maxRaise);
   }, [gameState, heroPlayer, totalPot, minRaise, maxRaise]);
 
-  // Loading
+  /* ─── Loading State ─── */
   if (!connected || !gameState) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center gap-4" style={{
-        background: 'radial-gradient(ellipse at center, #0d1117 0%, #050507 100%)',
+      <div className="h-[100dvh] flex flex-col items-center justify-center gap-4 noise-overlay" style={{
+        background: 'radial-gradient(ellipse at center, rgba(10,8,4,1) 0%, rgba(4,4,6,1) 100%)',
       }}>
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-          <img src={ASSETS.ui.crown} alt="" className="w-14 h-14" />
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+          <img src={ASSETS.ui.crown} alt="" className="w-12 h-12" style={{ filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.3))' }} />
         </motion.div>
-        <p className="text-gray-400 text-sm font-medium">{!connected ? 'Connecting to server...' : 'Joining table...'}</p>
-        {!user && <p className="text-yellow-400 text-xs">Please log in to play</p>}
-        <button onClick={() => navigate('/lobby')} className="text-gray-500 text-xs underline mt-4 hover:text-gray-300 transition-colors">
+        <p className="text-gray-400 text-sm font-medium">{!connected ? 'Connecting...' : 'Joining table...'}</p>
+        {!user && <p className="text-gold/60 text-xs">Please sign in to play</p>}
+        <button onClick={() => navigate('/lobby')} className="text-gray-600 text-xs underline mt-4 hover:text-gray-400 transition-colors">
           Back to Lobby
         </button>
       </div>
     );
   }
 
+  /* ─── Main Render ─── */
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden select-none" style={{
+    <div className="h-[100dvh] flex flex-col relative overflow-hidden select-none noise-overlay" style={{
       background: `url(${ASSETS.gameBg}) center/cover no-repeat`,
       backgroundColor: '#050507',
     }}>
-      {/* Dark overlay for contrast */}
-      <div className="absolute inset-0" style={{ background: 'rgba(5,5,7,0.55)' }} />
+      {/* Dark overlay */}
+      <div className="absolute inset-0" style={{ background: 'rgba(4,4,6,0.6)' }} />
 
       {/* ─── Top HUD ─── */}
-      <div className="relative z-30 flex items-center justify-between px-3 py-2 shrink-0" style={{
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%)',
+      <div className="relative z-30 flex items-center justify-between px-2 py-1.5 shrink-0" style={{
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 80%, transparent 100%)',
       }}>
         <button onClick={() => { leaveTable(tableId); navigate('/lobby'); }}
-          className="w-9 h-9 rounded-full flex items-center justify-center glass-panel-light active:scale-90 transition-transform">
-          <ArrowLeft size={16} className="text-gray-300" />
+          className="w-7 h-7 rounded-full flex items-center justify-center glass-card active:scale-90 transition-transform">
+          <ArrowLeft size={12} className="text-gray-400" />
         </button>
 
-        <div className="flex items-center gap-2">
-          <div className="glass-panel px-3 py-1.5 rounded-xl text-center">
-            <div className="text-[8px] uppercase tracking-[0.2em] text-gray-500 font-bold">
+        <div className="flex items-center gap-1.5">
+          <div className="glass-card px-2.5 py-1 rounded-lg text-center">
+            <div className="text-[7px] uppercase tracking-[0.15em] text-gray-500 font-semibold">
               {PHASE_LABELS[gameState.phase]} #{gameState.handNumber}
             </div>
-            <div className="text-xs font-bold text-gold font-mono-poker">
+            <div className="text-[10px] font-bold text-gold font-mono-poker">
               {gameState.smallBlind}/{gameState.bigBlind}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {gameState.phase !== 'showdown' && gameState.phase !== 'waiting' && (
-            <div className={`glass-panel px-2 py-1.5 rounded-xl flex items-center gap-1 ${turnTimer <= 10 ? 'border-red-500/30' : ''}`}>
-              <Clock size={10} className={turnTimer <= 10 ? 'text-red-400' : 'text-gray-500'} />
-              <span className={`text-[10px] font-bold font-mono-poker ${turnTimer <= 10 ? 'text-red-400 animate-pulse' : 'text-gray-400'}`}>
+            <div className={`glass-card px-1.5 py-1 rounded-lg flex items-center gap-0.5 ${turnTimer <= 10 ? 'border border-red-500/20' : ''}`}>
+              <Clock size={9} className={turnTimer <= 10 ? 'text-red-400' : 'text-gray-500'} />
+              <span className={`text-[9px] font-bold font-mono-poker ${turnTimer <= 10 ? 'text-red-400 animate-pulse' : 'text-gray-400'}`}>
                 {turnTimer}s
               </span>
             </div>
           )}
-          <div className="glass-panel-light px-2 py-1.5 rounded-xl flex items-center gap-1">
-            {connected ? <Wifi size={10} className="text-green-400" /> : <WifiOff size={10} className="text-red-400" />}
-            <Users size={10} className="text-gray-500" />
-            <span className="text-[9px] text-gray-400">{gameState.players.length}</span>
+          <div className="glass-card px-1.5 py-1 rounded-lg flex items-center gap-0.5">
+            {connected ? <Wifi size={8} className="text-emerald-400" /> : <WifiOff size={8} className="text-red-400" />}
+            <Users size={8} className="text-gray-500" />
+            <span className="text-[8px] text-gray-500">{gameState.players.length}</span>
           </div>
         </div>
       </div>
 
       {/* ─── Table Area ─── */}
       <div className="flex-1 relative z-10" style={{ minHeight: 0 }}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative" style={{ width: '96%', maxWidth: 640, aspectRatio: '1.55 / 1' }}>
+        <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4">
+          <div className="relative w-full" style={{ maxWidth: 720, aspectRatio: '16/10' }}>
 
-            {/* Poker table (CSS rendered) */}
-            <div className="absolute inset-0" style={{
-              borderRadius: '50%',
-              background: 'linear-gradient(180deg, rgba(30,30,50,0.97) 0%, rgba(15,15,28,0.99) 100%)',
-              boxShadow: '0 0 0 5px rgba(212,175,55,0.05), 0 0 0 10px rgba(8,8,16,0.95), 0 0 80px rgba(0,0,0,0.7)',
-              border: '2px solid rgba(212,175,55,0.06)',
+            {/* Poker table — outer rim */}
+            <div className="absolute inset-[3%] sm:inset-[5%]" style={{
+              borderRadius: '50%/50%',
+              background: 'linear-gradient(180deg, rgba(20,18,12,0.98) 0%, rgba(10,10,16,0.99) 100%)',
+              boxShadow: `
+                0 0 0 2px rgba(212,175,55,0.04),
+                0 0 0 5px rgba(6,6,10,0.95),
+                0 0 60px rgba(0,0,0,0.8),
+                inset 0 0 40px rgba(0,0,0,0.3)
+              `,
+              border: '1px solid rgba(212,175,55,0.04)',
             }}>
               {/* Green felt */}
               <div className="absolute" style={{
-                left: '3%', right: '3%', top: '5%', bottom: '5%',
+                left: '4%', right: '4%', top: '6%', bottom: '6%',
                 borderRadius: '50%',
-                background: 'radial-gradient(ellipse at 50% 40%, #1e7a3a 0%, #166b30 20%, #0f5424 45%, #093d18 70%, #052810 100%)',
-                boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5), inset 0 -20px 50px rgba(0,0,0,0.25)',
-                border: '1px solid rgba(212,175,55,0.03)',
+                background: 'radial-gradient(ellipse at 50% 40%, #1a7035 0%, #14602c 20%, #0d4d22 45%, #083a17 70%, #042810 100%)',
+                boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), inset 0 -10px 30px rgba(0,0,0,0.2)',
+                border: '1px solid rgba(212,175,55,0.02)',
               }}>
-                {/* Felt texture */}
-                <div className="absolute inset-0 rounded-[50%] opacity-[0.03]" style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 5h1v1H1V5zm2-2h1v1H3V3zm2-2h1v1H5V1z' fill='%23ffffff' fill-opacity='0.2'/%3E%3C/svg%3E")`,
-                }} />
-                {/* Inner decorative line */}
-                <div className="absolute" style={{
-                  left: '10%', right: '10%', top: '12%', bottom: '12%',
-                  borderRadius: '50%',
-                  border: '1px solid rgba(255,255,255,0.02)',
+                {/* Felt texture overlay */}
+                <div className="absolute inset-0 rounded-[50%] opacity-[0.02]" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 5h1v1H1V5zm2-2h1v1H3V3zm2-2h1v1H5V1z' fill='%23ffffff' fill-opacity='0.3'/%3E%3C/svg%3E")`,
                 }} />
               </div>
-            </div>
-
-            {/* Logo watermark */}
-            <div className="absolute left-1/2 -translate-x-1/2 z-[5] pointer-events-none" style={{ top: '14%' }}>
-              <img src={ASSETS.logo} alt="" className="w-14 h-14 opacity-[0.05]" />
             </div>
 
             {/* ─── Pot Display ─── */}
             {totalPot > 0 && (
               <motion.div
                 initial={{ scale: 0 }} animate={{ scale: 1 }}
-                className="absolute left-1/2 -translate-x-1/2 z-10 flex items-center gap-2"
+                className="absolute left-1/2 -translate-x-1/2 z-10 flex items-center gap-1"
                 style={{
                   top: '22%',
-                  background: 'rgba(0,0,0,0.75)',
+                  background: 'rgba(0,0,0,0.8)',
                   backdropFilter: 'blur(16px)',
-                  borderRadius: 20,
-                  padding: '5px 16px',
-                  border: '1px solid rgba(212,175,55,0.3)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                  borderRadius: 10,
+                  padding: '3px 8px',
+                  border: '1px solid rgba(212,175,55,0.2)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
                 }}
               >
-                <img src={ASSETS.chips.gold} alt="" className="w-5 h-5" style={{ filter: 'drop-shadow(0 2px 4px rgba(212,175,55,0.4))' }} />
-                <span className="text-sm font-black text-gold font-mono-poker">
+                <img src={ASSETS.chips.gold} alt="" className="w-3 h-3" style={{ filter: 'drop-shadow(0 1px 3px rgba(212,175,55,0.4))' }} />
+                <span className="text-[10px] sm:text-xs font-bold text-gold font-mono-poker">
                   {totalPot.toLocaleString()}
                 </span>
               </motion.div>
             )}
 
             {/* ─── Community Cards ─── */}
-            <div className="absolute left-1/2 flex gap-1.5 z-10" style={{ top: '42%', transform: 'translate(-50%, -50%)' }}>
+            <div className="absolute left-1/2 flex gap-0.5 sm:gap-1 z-10" style={{ top: '40%', transform: 'translate(-50%, -50%)' }}>
               <AnimatePresence>
                 {gameState.communityCards.map((card, i) => (
-                  <motion.div key={`cc-${i}`} initial={{ y: -20, opacity: 0, scale: 0.8 }} animate={{ y: 0, opacity: 1, scale: 1 }} transition={{ delay: i * 0.12 }}>
-                    <CardView card={card as Card} size="md" />
+                  <motion.div key={`cc-${i}`} initial={{ y: -12, opacity: 0, scale: 0.8 }} animate={{ y: 0, opacity: 1, scale: 1 }} transition={{ delay: i * 0.08 }}>
+                    <CardView card={card as Card} size="sm" />
                   </motion.div>
                 ))}
               </AnimatePresence>
-              {/* Empty card slots */}
+              {/* Empty slots */}
               {gameState.communityCards.length < 5 && gameState.phase !== 'waiting' && (
                 Array.from({ length: 5 - gameState.communityCards.length }).map((_, i) => (
-                  <div key={`e-${i}`} className="rounded-lg" style={{
-                    width: 42, height: 60,
-                    background: 'rgba(255,255,255,0.015)',
-                    border: '1px dashed rgba(255,255,255,0.04)',
+                  <div key={`e-${i}`} className="rounded-md" style={{
+                    width: 26, height: 38,
+                    background: 'rgba(255,255,255,0.01)',
+                    border: '1px dashed rgba(255,255,255,0.03)',
                   }} />
                 ))
               )}
@@ -543,7 +579,7 @@ export default function GameTable() {
                   isDealer={gameState.dealerSeat === player.seatIndex}
                   isSB={gameState.smallBlindSeat === player.seatIndex}
                   isBB={gameState.bigBlindSeat === player.seatIndex}
-                  isHero={player.userId === user?.id}
+                  isHero={player.seatIndex === heroSeat}
                   isShowdown={gameState.phase === 'showdown'}
                   isWinner={!!player.lastAction?.startsWith('WIN')}
                   timerPct={gameState.actionSeat === player.seatIndex ? timerPct : 0}
@@ -554,22 +590,33 @@ export default function GameTable() {
         </div>
       </div>
 
-      {/* ─── Hero Cards (large, bottom center) ─── */}
-      {heroPlayer && !heroPlayer.folded && heroPlayer.holeCards.length > 0 && (
-        <div className="flex justify-center gap-3 py-2 relative z-20 shrink-0" style={{
-          background: 'linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 100%)',
-        }}>
-          {heroPlayer.holeCards.map((card, i) => (
-            <motion.div
-              key={`hero-${i}`}
-              whileHover={{ y: -10, scale: 1.08 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-            >
-              <CardView card={card as Card} size="xl" />
-            </motion.div>
-          ))}
-        </div>
-      )}
+      {/* ─── Hero Cards ─── */}
+      <div className="shrink-0 relative z-20" style={{
+        background: 'linear-gradient(0deg, rgba(4,4,6,0.85) 0%, rgba(4,4,6,0.4) 60%, transparent 100%)',
+        minHeight: 36,
+      }}>
+        {heroPlayer && !heroPlayer.folded && heroPlayer.holeCards && heroPlayer.holeCards.length > 0 ? (
+          <div className="flex justify-center gap-1.5 sm:gap-2 py-1">
+            {heroPlayer.holeCards.map((card, i) => (
+              <motion.div
+                key={`hero-${i}-${card.rank}-${card.suit}`}
+                whileHover={{ y: -4, scale: 1.03 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <CardView card={card as Card} size="lg" />
+              </motion.div>
+            ))}
+          </div>
+        ) : heroPlayer?.folded ? (
+          <div className="flex justify-center py-2">
+            <span className="text-[10px] text-gray-600 tracking-wider uppercase">Folded</span>
+          </div>
+        ) : gameState.phase === 'waiting' ? null : (
+          <div className="flex justify-center py-2">
+            <span className="text-[10px] text-gray-600">Waiting for cards...</span>
+          </div>
+        )}
+      </div>
 
       {/* ─── Showdown Winner Overlay ─── */}
       <AnimatePresence>
@@ -577,50 +624,55 @@ export default function GameTable() {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
-            style={{ background: 'rgba(0,0,0,0.5)' }}
+            style={{ background: 'rgba(0,0,0,0.6)' }}
           >
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
-              className="glass-panel rounded-2xl p-6 mx-4 text-center max-w-xs gold-glow"
+              className="glass-card rounded-2xl p-5 mx-4 text-center max-w-xs"
+              style={{ border: '1px solid rgba(212,175,55,0.2)', boxShadow: '0 0 40px rgba(212,175,55,0.15)' }}
             >
-              <img src={ASSETS.ui.trophy} alt="" className="w-16 h-16 mx-auto mb-3" />
+              <img src={ASSETS.ui.trophy} alt="" className="w-12 h-12 mx-auto mb-2" style={{ filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.3))' }} />
               {gameState.players.filter(p => p.lastAction?.startsWith('WIN')).map(w => (
                 <div key={w.seatIndex}>
-                  <h2 className="text-xl font-black gold-text mb-1 font-display">
-                    {w.userId === user?.id ? 'YOU WIN!' : `${w.name} WINS!`}
+                  <h2 className="text-lg font-bold gold-text font-display">
+                    {w.seatIndex === heroSeat ? 'YOU WIN!' : `${w.name} WINS!`}
                   </h2>
                   {w.lastAction && w.lastAction !== 'WIN' && (
-                    <div className="text-sm text-cyan-neon mb-1">{w.lastAction.replace('WIN - ', '')}</div>
+                    <div className="text-xs text-gold-light/70 mt-1">{w.lastAction.replace('WIN - ', '')}</div>
                   )}
                 </div>
               ))}
-              <div className="text-[10px] text-gray-500 mt-3">Next hand starting...</div>
+              <div className="text-[9px] text-gray-600 mt-3 tracking-wider">Next hand starting...</div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ─── Action Panel ─── */}
-      <div className="shrink-0 relative z-30">
+      <div className="shrink-0 relative z-30" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {gameState.phase === 'waiting' ? (
-          /* Waiting state */
-          <div className="px-4 py-4 text-center" style={{
-            background: 'rgba(5,5,10,0.9)',
-            borderTop: '1px solid rgba(255,255,255,0.04)',
+          <div className="px-3 py-3 text-center" style={{
+            background: 'rgba(4,4,6,0.95)',
+            borderTop: '1px solid rgba(255,255,255,0.03)',
           }}>
-            <div className="text-sm text-gray-300 font-medium">Waiting for players...</div>
-            <div className="text-xs text-gray-500 mt-1">{gameState.players.length} / {tableSize} seated</div>
+            <div className="text-sm text-gray-400 font-medium">Waiting for players...</div>
+            <div className="text-[10px] text-gray-600 mt-0.5 font-mono-poker">{gameState.players.length} / {tableSize} seated</div>
           </div>
         ) : isMyTurn ? (
-          /* YOUR TURN — full action panel */
-          <div className="px-3 py-3 space-y-2" style={{
-            background: 'rgba(5,5,10,0.95)',
+          /* YOUR TURN */
+          <div className="px-2 py-2 space-y-1.5" style={{
+            background: 'rgba(4,4,6,0.96)',
             backdropFilter: 'blur(24px)',
-            borderTop: '2px solid rgba(212,175,55,0.25)',
+            borderTop: '2px solid rgba(212,175,55,0.2)',
           }}>
-            {/* Raise slider (expandable) */}
+            {/* YOUR TURN label */}
+            <div className="text-center">
+              <span className="text-[9px] font-bold text-gold animate-pulse uppercase tracking-[0.2em]">Your Turn</span>
+            </div>
+
+            {/* Raise slider */}
             <AnimatePresence>
               {showRaise && (
                 <motion.div
@@ -630,20 +682,22 @@ export default function GameTable() {
                   className="overflow-hidden"
                 >
                   {/* Presets */}
-                  <div className="flex gap-1.5 mb-2">
+                  <div className="flex gap-1 mb-1.5">
                     {raisePresets.map(p => (
                       <button key={p.label} onClick={() => setRaiseAmount(p.value)}
-                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                          raiseAmount === p.value ? 'bg-gold/20 text-gold border border-gold/40' : 'glass-panel-light text-gray-400 hover:text-gray-200'
+                        className={`flex-1 py-1 rounded-lg text-[8px] sm:text-[9px] font-bold transition-all ${
+                          raiseAmount === p.value
+                            ? 'bg-gold/15 text-gold border border-gold/30'
+                            : 'glass-card text-gray-500 hover:text-gray-300'
                         }`}>
                         {p.label}
                       </button>
                     ))}
                   </div>
                   {/* Slider + confirm */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-xs font-bold text-gold font-mono-poker w-16 text-right">
-                      {raiseAmount.toLocaleString()}
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-gold font-mono-poker w-12 text-right">
+                      {raiseAmount >= 1000 ? `${(raiseAmount / 1000).toFixed(1)}k` : raiseAmount.toLocaleString()}
                     </span>
                     <input
                       type="range"
@@ -651,14 +705,14 @@ export default function GameTable() {
                       max={maxRaise}
                       value={raiseAmount}
                       onChange={e => setRaiseAmount(parseInt(e.target.value))}
-                      className="flex-1 h-2 rounded-full appearance-none cursor-pointer"
+                      className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, #D4AF37 0%, #D4AF37 ${((raiseAmount - gameState.bigBlind) / Math.max(maxRaise - gameState.bigBlind, 1)) * 100}%, rgba(255,255,255,0.1) ${((raiseAmount - gameState.bigBlind) / Math.max(maxRaise - gameState.bigBlind, 1)) * 100}%, rgba(255,255,255,0.1) 100%)`,
+                        background: `linear-gradient(to right, #D4AF37 0%, #D4AF37 ${((raiseAmount - gameState.bigBlind) / Math.max(maxRaise - gameState.bigBlind, 1)) * 100}%, rgba(255,255,255,0.06) ${((raiseAmount - gameState.bigBlind) / Math.max(maxRaise - gameState.bigBlind, 1)) * 100}%, rgba(255,255,255,0.06) 100%)`,
                         accentColor: '#D4AF37',
                       }}
                     />
                     <button onClick={() => handleAction('raise', raiseAmount)}
-                      className="btn-primary-poker px-5 py-2 rounded-xl text-xs font-black">
+                      className="btn-primary-poker px-3 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold tracking-wider">
                       RAISE
                     </button>
                   </div>
@@ -667,15 +721,15 @@ export default function GameTable() {
             </AnimatePresence>
 
             {/* Main action buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-1.5">
               {/* FOLD */}
               <button onClick={() => handleAction('fold')}
-                className="flex-1 py-3.5 rounded-xl text-sm font-black transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 tracking-wider"
                 style={{
-                  background: 'linear-gradient(135deg, #8B0000, #5C0000)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,0,0,0.3)',
-                  boxShadow: '0 4px 12px rgba(139,0,0,0.3)',
+                  background: 'linear-gradient(135deg, #7f1d1d, #450a0a)',
+                  color: '#fca5a5',
+                  border: '1px solid rgba(220,38,38,0.2)',
+                  boxShadow: '0 2px 8px rgba(127,29,29,0.3)',
                 }}>
                 FOLD
               </button>
@@ -683,24 +737,38 @@ export default function GameTable() {
               {/* CHECK / CALL */}
               {canCheck ? (
                 <button onClick={() => handleAction('check')}
-                  className="flex-1 py-3.5 rounded-xl text-sm font-black transition-all active:scale-95 flex items-center justify-center gap-1.5 btn-action-poker">
+                  className="flex-1 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 tracking-wider"
+                  style={{
+                    background: 'linear-gradient(135deg, #065f46, #022c22)',
+                    color: '#6ee7b7',
+                    border: '1px solid rgba(16,185,129,0.2)',
+                    boxShadow: '0 2px 8px rgba(6,95,70,0.3)',
+                  }}>
                   CHECK
                 </button>
               ) : (
                 <button onClick={() => handleAction('call')}
-                  className="flex-1 py-3.5 rounded-xl text-sm font-black transition-all active:scale-95 flex items-center justify-center gap-1.5 btn-action-poker">
-                  CALL {callAmount.toLocaleString()}
+                  className="flex-1 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 tracking-wider"
+                  style={{
+                    background: 'linear-gradient(135deg, #065f46, #022c22)',
+                    color: '#6ee7b7',
+                    border: '1px solid rgba(16,185,129,0.2)',
+                    boxShadow: '0 2px 8px rgba(6,95,70,0.3)',
+                  }}>
+                  CALL {callAmount >= 1000 ? `${(callAmount / 1000).toFixed(1)}k` : callAmount.toLocaleString()}
                 </button>
               )}
 
               {/* RAISE toggle */}
               <button onClick={() => setShowRaise(!showRaise)}
-                className="flex-1 py-3.5 rounded-xl text-sm font-black transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 tracking-wider"
                 style={{
-                  background: showRaise ? 'rgba(212,175,55,0.15)' : 'linear-gradient(135deg, #D4AF37, #B8941F)',
-                  color: showRaise ? '#D4AF37' : '#000',
-                  border: showRaise ? '1px solid rgba(212,175,55,0.3)' : 'none',
-                  boxShadow: showRaise ? 'none' : '0 4px 12px rgba(212,175,55,0.3)',
+                  background: showRaise
+                    ? 'rgba(212,175,55,0.1)'
+                    : 'linear-gradient(135deg, #D4AF37, #9A7B1F)',
+                  color: showRaise ? '#D4AF37' : '#0a0a0f',
+                  border: showRaise ? '1px solid rgba(212,175,55,0.2)' : '1px solid rgba(212,175,55,0.3)',
+                  boxShadow: showRaise ? 'none' : '0 2px 8px rgba(212,175,55,0.2)',
                 }}>
                 RAISE
               </button>
@@ -708,12 +776,12 @@ export default function GameTable() {
               {/* ALL IN */}
               {heroPlayer && heroPlayer.chipStack > 0 && (
                 <button onClick={() => handleAction('allin')}
-                  className="py-3.5 px-3 rounded-xl text-xs font-black transition-all active:scale-95 flex items-center justify-center gap-1"
+                  className="py-2.5 px-2 rounded-xl text-[8px] sm:text-[9px] font-bold transition-all active:scale-95 tracking-wider"
                   style={{
-                    background: 'linear-gradient(135deg, #ff6b00, #cc5500)',
-                    color: '#fff',
-                    border: '1px solid rgba(255,107,0,0.5)',
-                    boxShadow: '0 4px 12px rgba(255,107,0,0.3)',
+                    background: 'linear-gradient(135deg, #c2410c, #7c2d12)',
+                    color: '#fed7aa',
+                    border: '1px solid rgba(234,88,12,0.2)',
+                    boxShadow: '0 2px 8px rgba(194,65,12,0.3)',
                   }}>
                   ALL IN
                 </button>
@@ -721,52 +789,52 @@ export default function GameTable() {
             </div>
           </div>
         ) : (
-          /* NOT YOUR TURN — pre-action buttons */
-          <div className="px-3 py-3" style={{
-            background: 'rgba(5,5,10,0.9)',
-            borderTop: '1px solid rgba(255,255,255,0.04)',
+          /* NOT YOUR TURN */
+          <div className="px-2 py-2" style={{
+            background: 'rgba(4,4,6,0.95)',
+            borderTop: '1px solid rgba(255,255,255,0.03)',
           }}>
             {heroPlayer?.folded ? (
-              <div className="text-center">
-                <span className="text-xs text-gray-500">Folded — waiting for next hand</span>
+              <div className="text-center py-1">
+                <span className="text-[10px] text-gray-600 tracking-wider">Folded — waiting for next hand</span>
               </div>
             ) : gameState.phase === 'showdown' ? (
-              <div className="text-center">
-                <span className="text-xs text-gray-400">Showdown — revealing cards...</span>
+              <div className="text-center py-1">
+                <span className="text-[10px] text-gray-500">Showdown — revealing cards...</span>
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="text-center text-[10px] text-gray-500 mb-1">
+              <div className="space-y-1.5">
+                <div className="text-center text-[9px] text-gray-600">
                   Waiting for {gameState.players.find(p => p.seatIndex === gameState.actionSeat)?.name || 'opponent'}...
                 </div>
-                {/* Pre-action checkboxes */}
-                <div className="flex gap-2">
+                {/* Pre-action buttons */}
+                <div className="flex gap-1">
                   <button
                     onClick={() => setPreAction(preAction === 'check_fold' ? null : 'check_fold')}
-                    className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all ${
+                    className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold transition-all tracking-wider ${
                       preAction === 'check_fold'
-                        ? 'bg-red-900/30 text-red-400 border border-red-500/30'
-                        : 'glass-panel-light text-gray-400 hover:text-gray-200'
+                        ? 'bg-red-900/20 text-red-400/80 border border-red-500/20'
+                        : 'glass-card text-gray-500 hover:text-gray-300'
                     }`}
                   >
-                    {preAction === 'check_fold' ? '✓ ' : ''}Check / Fold
+                    {preAction === 'check_fold' ? '✓ ' : ''}Check/Fold
                   </button>
                   <button
                     onClick={() => setPreAction(preAction === 'call_any' ? null : 'call_any')}
-                    className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all ${
+                    className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold transition-all tracking-wider ${
                       preAction === 'call_any'
-                        ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-500/30'
-                        : 'glass-panel-light text-gray-400 hover:text-gray-200'
+                        ? 'bg-emerald-900/20 text-emerald-400/80 border border-emerald-500/20'
+                        : 'glass-card text-gray-500 hover:text-gray-300'
                     }`}
                   >
                     {preAction === 'call_any' ? '✓ ' : ''}Call Any
                   </button>
                   <button
                     onClick={() => setPreAction(preAction === 'fold_to_bet' ? null : 'fold_to_bet')}
-                    className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all ${
+                    className={`flex-1 py-1.5 rounded-lg text-[9px] font-bold transition-all tracking-wider ${
                       preAction === 'fold_to_bet'
-                        ? 'bg-orange-900/30 text-orange-400 border border-orange-500/30'
-                        : 'glass-panel-light text-gray-400 hover:text-gray-200'
+                        ? 'bg-orange-900/20 text-orange-400/80 border border-orange-500/20'
+                        : 'glass-card text-gray-500 hover:text-gray-300'
                     }`}
                   >
                     {preAction === 'fold_to_bet' ? '✓ ' : ''}Fold to Bet

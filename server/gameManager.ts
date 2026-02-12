@@ -167,6 +167,10 @@ class GameManager {
       (socket as any).__tableId = data.tableId;
       (socket as any).__seatIndex = existingPlayer.seatIndex;
       (socket as any).__userId = data.userId;
+      
+      // Send the player their seat index confirmation
+      socket.emit("seat_assigned", { seatIndex: existingPlayer.seatIndex });
+      
       this.broadcastState(data.tableId);
       return;
     }
@@ -237,6 +241,9 @@ class GameManager {
     (socket as any).__tableId = data.tableId;
     (socket as any).__seatIndex = seatIndex;
     (socket as any).__userId = data.userId;
+
+    // Send the player their seat index confirmation
+    socket.emit("seat_assigned", { seatIndex });
 
     // Update DB
     await db.update(gameTables).set({
@@ -604,16 +611,32 @@ class GameManager {
     const room = this.tables.get(tableId);
     if (!room || !this.io) return;
 
-    // Send personalized state to each player
+    // Collect all seated socket IDs so we can exclude them from spectator broadcast
+    const seatedSocketIds = new Set<string>();
+
+    // Send personalized state to each seated player
     for (const [seatIndex, socketId] of Array.from(room.sockets.entries())) {
+      seatedSocketIds.add(socketId);
       const socket = this.io.sockets.sockets.get(socketId);
       if (socket) {
         socket.emit("game_state", sanitizeForPlayer(room.state, seatIndex));
       }
     }
 
-    // Also broadcast a spectator view (no hole cards)
-    this.io.to(`table_${tableId}`).emit("spectator_state", sanitizeForPlayer(room.state, -1));
+    // Send spectator view ONLY to non-seated sockets in the room
+    // This prevents spectator_state from overwriting personalized game_state
+    const roomSockets = this.io.sockets.adapter.rooms.get(`table_${tableId}`);
+    if (roomSockets) {
+      const spectatorState = sanitizeForPlayer(room.state, -1);
+      for (const socketId of Array.from(roomSockets)) {
+        if (!seatedSocketIds.has(socketId)) {
+          const socket = this.io.sockets.sockets.get(socketId);
+          if (socket) {
+            socket.emit("spectator_state", spectatorState);
+          }
+        }
+      }
+    }
   }
 
   // ─── Public API for tRPC ───────────────────────────────

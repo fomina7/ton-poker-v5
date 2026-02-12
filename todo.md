@@ -94,3 +94,17 @@
 - [x] Replace white-background images with clean transparent PNG assets
 - [x] Update assets.ts with new CDN URLs
 - [x] Verify all assets display correctly on dark background
+
+## Critical Gameplay Bugs (User Report: "can't even play poker")
+- [x] Diagnose and fix all blocking gameplay issues
+- [x] Verify full game cycle: join → deal → bet → flop → turn → river → showdown → new hand
+- [x] Ensure action buttons always appear when it's your turn
+- [x] Ensure cards are always visible
+- [x] Ensure balance updates correctly after each hand
+
+## Premium Club Redesign (v3)
+- [x] New global theme: ultra-dark luxury with gold/emerald, premium Google Fonts
+- [x] Home page: cinematic premium landing with VIP club feel
+- [x] Lobby page: sleek premium table cards with live player indicators
+- [x] GameTable: premium photorealistic felt, elegant card design, polished HUD
+- [x] Full mobile-first responsive across all pages

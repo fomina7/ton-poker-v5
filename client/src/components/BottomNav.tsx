@@ -1,6 +1,6 @@
-/*
- * BottomNav — Cyber Noir Casino theme
- * Bottom navigation bar for the poker app
+/**
+ * BottomNav — HOUSE POKER Premium Club
+ * Sleek bottom navigation with gold accents
  */
 import { useLocation, Link } from 'wouter';
 import { Home, Trophy, User, Wallet, MoreHorizontal } from 'lucide-react';
@@ -17,20 +17,28 @@ export default function BottomNav() {
   const [location] = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-gold/15">
-      <div className="flex items-center justify-around py-2 pb-5">
+    <nav className="fixed bottom-0 left-0 right-0 z-40" style={{
+      background: 'rgba(6, 6, 10, 0.92)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderTop: '1px solid rgba(212, 175, 55, 0.06)',
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+    }}>
+      <div className="flex items-center justify-around py-1.5">
         {NAV_ITEMS.map((item) => {
           const isActive = location === item.path;
           const Icon = item.icon;
           return (
             <Link key={item.path} href={item.path}>
-              <div className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all ${
-                isActive ? 'text-gold' : 'text-gray-500 hover:text-gray-300'
+              <div className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all duration-200 ${
+                isActive ? 'text-gold' : 'text-gray-600 hover:text-gray-400 active:scale-95'
               }`}>
-                <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
+                <span className="text-[9px] font-medium tracking-wider">{item.label}</span>
                 {isActive && (
-                  <div className="w-1 h-1 rounded-full bg-gold mt-0.5" />
+                  <div className="w-3 h-0.5 rounded-full mt-0.5" style={{
+                    background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)',
+                  }} />
                 )}
               </div>
             </Link>

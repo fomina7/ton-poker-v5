@@ -540,6 +540,8 @@ function evaluatePreflop(cards: Card[]): number {
 }
 
 // ─── Sanitize for Client ─────────────────────────────────
+// CRITICAL: This function creates the client-visible game state.
+// `mySeatIndex` is included so the client knows which seat belongs to them.
 export function sanitizeForPlayer(state: GameState, seatIndex: number): any {
   return {
     tableId: state.tableId,
@@ -556,6 +558,10 @@ export function sanitizeForPlayer(state: GameState, seatIndex: number): any {
     handNumber: state.handNumber,
     actionDeadline: state.actionDeadline,
     pots: state.pots,
+    // IMPORTANT: Include the seat index so client knows which player is "me"
+    mySeatIndex: seatIndex,
+    // Include server timestamp so client can calculate timer offset
+    serverTime: Date.now(),
     players: state.players.map(p => ({
       seatIndex: p.seatIndex,
       name: p.name,

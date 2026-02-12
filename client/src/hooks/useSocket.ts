@@ -37,6 +37,8 @@ export interface ServerGameState {
   actionDeadline: number;
   pots: { amount: number; eligiblePlayerIds: number[] }[];
   players: ServerPlayer[];
+  mySeatIndex: number; // Server tells us which seat is ours
+  serverTime: number;  // Server timestamp for timer sync
 }
 
 export function useSocket() {
@@ -46,6 +48,8 @@ export function useSocket() {
   const [mySeatIndex, setMySeatIndex] = useState<number>(-1);
   const [error, setError] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<{ socketId: string; message: string; timestamp: number }[]>([]);
+  // Track server-client time offset for accurate timer
+  const timeOffsetRef = useRef<number>(0);
 
   useEffect(() => {
     const socket = io({
@@ -64,13 +68,31 @@ export function useSocket() {
       setConnected(false);
     });
 
+    // Server confirms our seat assignment
+    socket.on('seat_assigned', (data: { seatIndex: number }) => {
+      console.log('[WS] Seat assigned:', data.seatIndex);
+      setMySeatIndex(data.seatIndex);
+    });
+
+    // Personalized game state (includes our hole cards)
     socket.on('game_state', (state: ServerGameState) => {
+      // Calculate time offset between server and client
+      if (state.serverTime) {
+        timeOffsetRef.current = Date.now() - state.serverTime;
+      }
+      // Use mySeatIndex from server
+      if (state.mySeatIndex !== undefined && state.mySeatIndex >= 0) {
+        setMySeatIndex(state.mySeatIndex);
+      }
       setGameState(state);
     });
 
+    // Spectator state — only used if we're not seated
     socket.on('spectator_state', (state: ServerGameState) => {
-      // Only use spectator state if we don't have a personalized one
-      setGameState(prev => prev ? prev : state);
+      setGameState(prev => {
+        if (prev && prev.mySeatIndex >= 0) return prev; // keep personalized state
+        return state;
+      });
     });
 
     socket.on('error', (data: { message: string }) => {
@@ -89,7 +111,7 @@ export function useSocket() {
   const joinTable = useCallback((tableId: number, userId: number, seatIndex?: number) => {
     if (socketRef.current) {
       socketRef.current.emit('join_table', { tableId, userId, seatIndex });
-      if (seatIndex !== undefined) setMySeatIndex(seatIndex);
+      // Don't set mySeatIndex here — wait for server's seat_assigned event
     }
   }, []);
 
@@ -119,6 +141,7 @@ export function useSocket() {
     mySeatIndex,
     error,
     chatMessages,
+    timeOffset: timeOffsetRef.current,
     joinTable,
     leaveTable,
     sendAction,
