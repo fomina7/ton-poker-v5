@@ -10,6 +10,8 @@ import { getLoginUrl } from '@/const';
 import { trpc } from '@/lib/trpc';
 import { useMemo, useState, useEffect } from 'react';
 import HousePokerLogo from '@/components/HousePokerLogo';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 /* ─── Subtle gold dust particles ─── */
 function GoldDust() {
@@ -89,6 +91,8 @@ function LiveDot() {
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
   const { data: stats } = trpc.tables.onlineStats.useQuery(undefined, {
     refetchInterval: 5000, // refresh every 5 seconds for live feel
   });
@@ -101,9 +105,23 @@ export default function Home() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col relative overflow-hidden noise-overlay" style={{
-      background: 'radial-gradient(ellipse at 50% 30%, rgba(20, 16, 8, 1) 0%, rgba(8, 8, 12, 1) 50%, rgba(4, 4, 6, 1) 100%)',
+      background: isDark
+        ? 'radial-gradient(ellipse at 50% 30%, rgba(20, 16, 8, 1) 0%, rgba(8, 8, 12, 1) 50%, rgba(4, 4, 6, 1) 100%)'
+        : 'radial-gradient(ellipse at 50% 30%, #f5f0e8 0%, #ece4d4 50%, #e0d5c0 100%)',
     }}>
-      <GoldDust />
+      {isDark && <GoldDust />}
+
+      {/* Theme toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <button onClick={toggleTheme}
+          className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+          style={{
+            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)',
+            border: isDark ? '1px solid rgba(212,175,55,0.2)' : '1px solid rgba(0,0,0,0.1)',
+          }}>
+          {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-gray-600" />}
+        </button>
+      </div>
 
       {/* Top ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none"
@@ -125,11 +143,11 @@ export default function Home() {
           >
             <HousePokerLogo size={90} showText={false} />
           </motion.div>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-wide gold-text leading-tight mt-3">
+          <h1 className={`font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-wide leading-tight mt-3 ${isDark ? 'gold-text' : 'text-amber-800'}`}>
             HOUSE POKER
           </h1>
           <div className="divider-gold w-32 sm:w-48 mx-auto mt-3 mb-3" />
-          <p className="text-[11px] sm:text-xs tracking-[0.3em] uppercase text-gray-500 font-medium">
+          <p className={`text-[11px] sm:text-xs tracking-[0.3em] uppercase font-medium ${isDark ? 'text-gray-500' : 'text-amber-700/60'}`}>
             Premium Poker Club
           </p>
         </motion.div>
@@ -176,38 +194,38 @@ export default function Home() {
           className="flex flex-wrap justify-center gap-2.5 sm:gap-3 mb-6 sm:mb-8"
         >
           {/* Active Tables */}
-          <div className="glass-card px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px]">
-            <div className="text-base sm:text-lg font-bold text-gold font-mono-poker">
+          <div className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px] ${isDark ? 'glass-card' : 'bg-white/60 border border-amber-200/50 shadow-sm'}`}>
+            <div className={`text-base sm:text-lg font-bold font-mono-poker ${isDark ? 'text-gold' : 'text-amber-800'}`}>
               {stats?.activeTables ?? 0}
             </div>
-            <div className="text-[8px] sm:text-[9px] text-gray-500 uppercase tracking-[0.15em] font-medium">Tables</div>
+            <div className={`text-[8px] sm:text-[9px] uppercase tracking-[0.15em] font-medium ${isDark ? 'text-gray-500' : 'text-amber-700/60'}`}>Tables</div>
           </div>
 
           {/* Total Players */}
-          <div className="glass-card px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px]">
+          <div className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px] ${isDark ? 'glass-card' : 'bg-white/60 border border-amber-200/50 shadow-sm'}`}>
             <div className="flex items-center justify-center gap-1.5">
               <LiveDot />
-              <span className="text-base sm:text-lg font-bold text-green-400 font-mono-poker">
+              <span className={`text-base sm:text-lg font-bold font-mono-poker ${isDark ? 'text-green-400' : 'text-green-700'}`}>
                 {stats?.onlinePlayers ?? 0}
               </span>
             </div>
-            <div className="text-[8px] sm:text-[9px] text-gray-500 uppercase tracking-[0.15em] font-medium">Playing</div>
+            <div className={`text-[8px] sm:text-[9px] uppercase tracking-[0.15em] font-medium ${isDark ? 'text-gray-500' : 'text-amber-700/60'}`}>Playing</div>
           </div>
 
           {/* Real Players */}
-          <div className="glass-card px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px]">
-            <div className="text-base sm:text-lg font-bold text-blue-400 font-mono-poker">
+          <div className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px] ${isDark ? 'glass-card' : 'bg-white/60 border border-amber-200/50 shadow-sm'}`}>
+            <div className={`text-base sm:text-lg font-bold font-mono-poker ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
               {stats?.onlineHumans ?? 0}
             </div>
-            <div className="text-[8px] sm:text-[9px] text-gray-500 uppercase tracking-[0.15em] font-medium">Players</div>
+            <div className={`text-[8px] sm:text-[9px] uppercase tracking-[0.15em] font-medium ${isDark ? 'text-gray-500' : 'text-amber-700/60'}`}>Players</div>
           </div>
 
           {/* Bots */}
-          <div className="glass-card px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px]">
-            <div className="text-base sm:text-lg font-bold text-amber-400 font-mono-poker">
+          <div className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-center min-w-[70px] ${isDark ? 'glass-card' : 'bg-white/60 border border-amber-200/50 shadow-sm'}`}>
+            <div className={`text-base sm:text-lg font-bold font-mono-poker ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>
               {stats?.onlineBots ?? 0}
             </div>
-            <div className="text-[8px] sm:text-[9px] text-gray-500 uppercase tracking-[0.15em] font-medium">Bots</div>
+            <div className={`text-[8px] sm:text-[9px] uppercase tracking-[0.15em] font-medium ${isDark ? 'text-gray-500' : 'text-amber-700/60'}`}>Bots</div>
           </div>
         </motion.div>
 
@@ -233,7 +251,7 @@ export default function Home() {
             transition={{ delay: 1.6 }}
             className="mt-4 text-xs text-gray-500"
           >
-            Welcome back, <span className="text-gold-light font-medium">{user.name}</span>
+            Welcome back, <span className={`font-medium ${isDark ? 'text-gold-light' : 'text-amber-800'}`}>{user.name}</span>
           </motion.div>
         )}
       </div>
@@ -259,7 +277,7 @@ export default function Home() {
           ))}
         </motion.div>
 
-        <p className="text-[10px] text-gray-700 tracking-wider">v4.0 — Play responsibly</p>
+        <p className={`text-[10px] tracking-wider ${isDark ? 'text-gray-700' : 'text-amber-700/40'}`}>v4.0 — Play responsibly</p>
       </div>
     </div>
   );

@@ -15,6 +15,8 @@ import type { Card } from '@/lib/assets';
 import { toast } from 'sonner';
 import PokerCard from '@/components/PokerCard';
 import { formatChipAmount } from '@/components/PokerChip';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 /* ─── 6-max seat positions (% of container) ─── */
 const SEATS_6 = [
@@ -142,7 +144,7 @@ function DealerButton() {
 
 /* ─── Player Seat Component ─── */
 function PlayerSeat({
-  player, isHero, isDealer, isSB, isBB, isActive, seatPos, onSit,
+  player, isHero, isDealer, isSB, isBB, isActive, seatPos, onSit, isDark = true,
 }: {
   player: ServerPlayer | null;
   isHero: boolean;
@@ -152,6 +154,7 @@ function PlayerSeat({
   isActive: boolean;
   seatPos: { x: number; y: number };
   onSit: () => void;
+  isDark?: boolean;
 }) {
   if (!player) {
     return (
@@ -218,9 +221,11 @@ function PlayerSeat({
         )}
 
         <div className="relative rounded-lg overflow-hidden" style={{
-          background: 'linear-gradient(180deg, rgba(25,25,40,0.95) 0%, rgba(12,12,20,0.98) 100%)',
+          background: isDark
+            ? 'linear-gradient(180deg, rgba(25,25,40,0.95) 0%, rgba(12,12,20,0.98) 100%)'
+            : 'linear-gradient(180deg, rgba(30,30,20,0.92) 0%, rgba(20,20,15,0.95) 100%)',
           border: `1.5px solid ${isActive ? 'rgba(212,175,55,0.6)' : 'rgba(212,175,55,0.25)'}`,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+          boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.3)',
           minWidth: '100px',
         }}>
           <div className="flex items-center gap-2.5 px-2.5 py-2">
@@ -340,18 +345,20 @@ function BetPill({ amount, x, y }: { amount: number; x: number; y: number }) {
 }
 
 /* ─── Programmatic Table SVG (nano banano) ─── */
-function PokerTableSVG() {
+function PokerTableSVG({ isDark = true }: { isDark?: boolean }) {
+  const feltColors = isDark
+    ? { c1: '#1a2332', c2: '#141c28', c3: '#0f1520', c4: '#0a0e15', rim: '#0a0a12', glow: 'rgba(30,50,70,0.3)' }
+    : { c1: '#1e7a3a', c2: '#166b30', c3: '#0f5424', c4: '#093d18', rim: '#2d5a1e', glow: 'rgba(40,100,50,0.3)' };
+
   return (
     <svg viewBox="0 0 400 320" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
       <defs>
-        {/* Table felt gradient */}
         <radialGradient id="feltGrad" cx="50%" cy="40%">
-          <stop offset="0%" stopColor="#1a2332" />
-          <stop offset="40%" stopColor="#141c28" />
-          <stop offset="70%" stopColor="#0f1520" />
-          <stop offset="100%" stopColor="#0a0e15" />
+          <stop offset="0%" stopColor={feltColors.c1} />
+          <stop offset="40%" stopColor={feltColors.c2} />
+          <stop offset="70%" stopColor={feltColors.c3} />
+          <stop offset="100%" stopColor={feltColors.c4} />
         </radialGradient>
-        {/* Gold border gradient */}
         <linearGradient id="goldBorder" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#D4AF37" />
           <stop offset="25%" stopColor="#F5E6A3" />
@@ -359,45 +366,22 @@ function PokerTableSVG() {
           <stop offset="75%" stopColor="#B8941F" />
           <stop offset="100%" stopColor="#D4AF37" />
         </linearGradient>
-        {/* Table outer shadow */}
         <filter id="tableShadow">
-          <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="rgba(0,0,0,0.5)" />
+          <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor={isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.25)'} />
         </filter>
-        {/* Felt texture noise */}
-        <filter id="feltNoise">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise" />
-          <feColorMatrix type="saturate" values="0" in="noise" result="grayNoise" />
-          <feBlend in="SourceGraphic" in2="grayNoise" mode="multiply" />
-        </filter>
-        {/* Inner glow */}
         <radialGradient id="innerGlow" cx="50%" cy="35%">
-          <stop offset="0%" stopColor="rgba(30,50,70,0.3)" />
+          <stop offset="0%" stopColor={feltColors.glow} />
           <stop offset="100%" stopColor="transparent" />
         </radialGradient>
       </defs>
 
-      {/* Outer rim (dark) */}
-      <ellipse cx="200" cy="160" rx="195" ry="150" fill="#0a0a12" filter="url(#tableShadow)" />
-
-      {/* Gold trim border */}
+      <ellipse cx="200" cy="160" rx="195" ry="150" fill={feltColors.rim} filter="url(#tableShadow)" />
       <ellipse cx="200" cy="160" rx="188" ry="144" fill="none" stroke="url(#goldBorder)" strokeWidth="2" />
-
-      {/* Dark felt surface */}
       <ellipse cx="200" cy="160" rx="184" ry="140" fill="url(#feltGrad)" />
-
-      {/* Inner gold line */}
       <ellipse cx="200" cy="160" rx="170" ry="128" fill="none" stroke="rgba(212,175,55,0.15)" strokeWidth="0.5" />
-
-      {/* Center light spot */}
       <ellipse cx="200" cy="145" rx="120" ry="80" fill="url(#innerGlow)" />
-
-      {/* Subtle felt texture overlay */}
       <ellipse cx="200" cy="160" rx="184" ry="140" fill="rgba(255,255,255,0.01)" opacity="0.5" />
-
-      {/* Table edge highlights (light reflections) */}
-      <ellipse cx="200" cy="160" rx="188" ry="144" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" />
-
-      {/* Corner light spots */}
+      <ellipse cx="200" cy="160" rx="188" ry="144" fill="none" stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.15)'} strokeWidth="4" />
       <circle cx="60" cy="160" r="3" fill="rgba(255,200,100,0.15)" />
       <circle cx="340" cy="160" r="3" fill="rgba(255,200,100,0.15)" />
       <circle cx="200" cy="30" r="3" fill="rgba(255,200,100,0.15)" />
@@ -406,32 +390,38 @@ function PokerTableSVG() {
   );
 }
 
-/* ─── Background (dark luxury casino atmosphere) ─── */
-function CasinoBackground() {
+/* ─── Background (theme-aware casino atmosphere) ─── */
+function CasinoBackground({ isDark = true }: { isDark?: boolean }) {
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Base dark gradient */}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at 50% 30%, #1a1a2e 0%, #0f0f1a 30%, #0a0a12 60%, #050508 100%)',
+        background: isDark
+          ? 'radial-gradient(ellipse at 50% 30%, #1a1a2e 0%, #0f0f1a 30%, #0a0a12 60%, #050508 100%)'
+          : 'radial-gradient(ellipse at 50% 30%, #f5f0e8 0%, #e8dfd0 30%, #d4c9b0 60%, #c0b090 100%)',
       }} />
 
-      {/* Ambient warm glow from table */}
       <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] rounded-[50%]" style={{
-        background: 'radial-gradient(ellipse, rgba(212,175,55,0.04) 0%, transparent 60%)',
+        background: isDark
+          ? 'radial-gradient(ellipse, rgba(212,175,55,0.04) 0%, transparent 60%)'
+          : 'radial-gradient(ellipse, rgba(212,175,55,0.08) 0%, transparent 60%)',
         filter: 'blur(40px)',
       }} />
 
-      {/* Subtle light streaks */}
       <div className="absolute top-0 left-1/4 w-px h-[30%] opacity-[0.03]" style={{
-        background: 'linear-gradient(180deg, rgba(255,200,100,0.5), transparent)',
+        background: isDark
+          ? 'linear-gradient(180deg, rgba(255,200,100,0.5), transparent)'
+          : 'linear-gradient(180deg, rgba(180,150,80,0.3), transparent)',
       }} />
       <div className="absolute top-0 right-1/4 w-px h-[25%] opacity-[0.03]" style={{
-        background: 'linear-gradient(180deg, rgba(255,200,100,0.5), transparent)',
+        background: isDark
+          ? 'linear-gradient(180deg, rgba(255,200,100,0.5), transparent)'
+          : 'linear-gradient(180deg, rgba(180,150,80,0.3), transparent)',
       }} />
 
-      {/* Vignette */}
       <div className="absolute inset-0" style={{
-        background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%)',
+        background: isDark
+          ? 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%)'
+          : 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.15) 100%)',
       }} />
     </div>
   );
@@ -526,13 +516,16 @@ export default function GameTable() {
   const minR = gameState?.minRaise || bb * 2;
   const maxR = heroPlayer ? heroPlayer.chipStack + heroPlayer.currentBet : 0;
 
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative" style={{ background: '#050508' }}>
-      <CasinoBackground />
+    <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative" style={{ background: isDark ? '#050508' : '#c0b090' }}>
+      <CasinoBackground isDark={isDark} />
 
       {/* ─── TOP BAR ─── */}
       <div className="relative z-40 flex items-center justify-between px-3 py-2 safe-area-top"
-        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%)' }}>
+        style={{ background: isDark ? 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%)' : 'linear-gradient(180deg, rgba(140,120,80,0.6) 0%, transparent 100%)' }}>
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/lobby')}
             className="w-8 h-8 rounded-full flex items-center justify-center text-blue-400 hover:text-blue-300 transition-colors"
@@ -554,9 +547,10 @@ export default function GameTable() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-300"
-            style={{ background: 'rgba(255,255,255,0.05)' }}>
-            <Settings size={16} />
+          <button onClick={toggleTheme}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-300 transition-colors"
+            style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.1)' }}>
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-300"
             style={{ background: 'rgba(255,255,255,0.05)' }}>
@@ -576,7 +570,7 @@ export default function GameTable() {
       <div className="flex-1 relative z-10 mx-auto w-full" style={{ maxWidth: '480px' }}>
         {/* Table SVG */}
         <div className="absolute inset-0" style={{ top: '4%', bottom: '4%', left: '2%', right: '2%' }}>
-          <PokerTableSVG />
+          <PokerTableSVG isDark={isDark} />
         </div>
 
         {/* "TEXAS HOLD'EM" center text */}
@@ -643,7 +637,7 @@ export default function GameTable() {
           return (
             <PlayerSeat key={seatIdx} player={player} isHero={isHero}
               isDealer={isDealer} isSB={isSB} isBB={isBB} isActive={isActive}
-              seatPos={seatPos} onSit={() => handleSit(seatIdx)} />
+              seatPos={seatPos} onSit={() => handleSit(seatIdx)} isDark={isDark} />
           );
         })}
 
@@ -692,7 +686,10 @@ export default function GameTable() {
 
       {/* ─── ACTION PANEL ─── */}
       <div className="relative z-40 px-3 pb-3 safe-area-bottom"
-        style={{ background: 'linear-gradient(0deg, rgba(5,5,8,0.95) 0%, rgba(5,5,8,0.6) 70%, transparent 100%)' }}>
+        style={{ background: isDark
+          ? 'linear-gradient(0deg, rgba(5,5,8,0.95) 0%, rgba(5,5,8,0.6) 70%, transparent 100%)'
+          : 'linear-gradient(0deg, rgba(60,50,35,0.95) 0%, rgba(60,50,35,0.7) 70%, transparent 100%)'
+        }}>
 
         {/* YOUR TURN indicator */}
         {isMyTurn && (
