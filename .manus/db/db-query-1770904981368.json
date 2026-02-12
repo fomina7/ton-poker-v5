@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, nickname, balanceReal, role FROM users LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user JPPi4KWSC9uSqwy.e50ca6cb3452 --database diCBEAZbwppvACD82XAuCX --execute SELECT id, name, nickname, balanceReal, role FROM users LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "fomina.7akiw",
+      "nickname": "NULL",
+      "balanceReal": "10000",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tnickname\tbalanceReal\trole\n1\tfomina.7akiw\tNULL\t10000\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}
