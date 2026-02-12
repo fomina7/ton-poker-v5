@@ -323,3 +323,10 @@
 - [x] Verify deployment: Lobby shows tables
 - [x] Verify deployment: Game table works with bots
 - [x] Verify deployment: Cards dealt, actions work (FOLD/CHECK/RAISE/ALL-IN)
+
+## v14 - Railway Bug Fixes
+- [ ] Fix guest login not working on Railway
+- [ ] Fix game not playable on Railway
+- [ ] Verify registration works on Railway
+- [ ] Verify full game flow works on Railway (register -> login -> lobby -> join table -> play)
+- [ ] Test and fix all errors found during testing

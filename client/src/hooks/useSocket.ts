@@ -61,7 +61,8 @@ export function useSocket() {
   useEffect(() => {
     const socket = io({
       path: '/api/socket.io',
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
+      upgrade: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,

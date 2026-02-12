@@ -41,6 +41,9 @@ class GameManager {
       path: "/api/socket.io",
       pingTimeout: 30000,
       pingInterval: 10000,
+      transports: ['polling', 'websocket'],
+      allowUpgrades: true,
+      httpCompression: false,
     });
 
     this.io.on("connection", (socket: Socket) => {
