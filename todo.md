@@ -146,16 +146,24 @@
 - [x] Verify full game cycle works end-to-end (hands complete through all phases with rake)
 
 ## Premium Design Overhaul (TON Poker Style)
-- [ ] GameTable: Vertical oval table with green felt gradient and glowing white border
-- [ ] GameTable: Atmospheric background with particles (dark purple/brown)
-- [ ] GameTable: Improved card design - larger, clearer with proper suit symbols
-- [ ] GameTable: Gold bet pills next to players
-- [ ] GameTable: Action buttons in TON Poker style (Fold red, Call green, Raise yellow)
-- [ ] GameTable: Raise presets panel (Min, 3BB, 5BB, All In)
-- [ ] GameTable: Empty seats with SIT button
-- [ ] GameTable: Game info label (NLH ~ 0.02/0.05 6MAX)
+- [x] GameTable: Vertical oval table with green felt gradient and glowing white border
+- [x] GameTable: Atmospheric background with particles (dark purple/brown)
+- [x] GameTable: Improved card design - larger, clearer with proper suit symbols
+- [x] GameTable: Gold bet pills next to players
+- [x] GameTable: Action buttons in TON Poker style (Fold red, Call white, Raise gold)
+- [x] GameTable: Raise presets panel (Min, 3BB, 5BB, All In)
+- [x] GameTable: Empty seats with SIT button
+- [x] GameTable: Game info label (NLH ~ 0.02/0.05 6MAX)
 - [ ] GameTable: Player level badges
-- [ ] GameTable: Dealer button as gold circle on avatar
-- [ ] GameTable: Chat/emoji buttons at bottom
-- [ ] GameTable: Improved pot display with chip icon
-- [ ] GameTable: Hand ID shown in center of table
+- [x] GameTable: Dealer button as gold circle on avatar
+- [x] GameTable: Chat/emoji buttons at bottom
+- [x] GameTable: Improved pot display with chip icon
+- [x] GameTable: Hand ID shown in center of table
+
+## Visual Fixes v5 (User Feedback from Screenshot)
+- [x] Fix player positions — side players cut off, cards not visible
+- [x] Create premium atmospheric background with particles, stars, nebula
+- [x] Redesign action buttons (FOLD/CALL/RAISE/ALL IN) — premium, fully visible
+- [x] Create proper HOUSE POKER logo via AI generation (golden shield with crown)
+- [x] Make all cards clearly visible — community and player cards
+- [x] Ensure buttons not cut off at bottom of screen

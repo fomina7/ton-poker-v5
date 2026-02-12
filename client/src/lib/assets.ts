@@ -12,8 +12,10 @@ export const ASSETS = {
   dealerBtn: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/HIpNZPoYommKpOYx.png',
   sbBtn: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/jgMKFTVigoolOkbj.png',
   bbBtn: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/nUEiPGtUglFziIrs.png',
-  logo: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/HLoEgsMwPssQEdEq.png',
+  logo: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/fjDtTgDnAThLrfKU.png',
+  logoCompact: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/LxKDwPnvSzYAbleN.png',
   logoAlt: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/nxoljfQNRAlVkYPj.png',
+  tableBg: 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663292314986/RlLvqWUsePOMvUNc.png',
 
   // Chips — NEW transparent background versions
   chips: {

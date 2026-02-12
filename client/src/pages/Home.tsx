@@ -9,6 +9,7 @@ import { ASSETS } from '@/lib/assets';
 import { getLoginUrl } from '@/const';
 import { trpc } from '@/lib/trpc';
 import { useMemo, useState, useEffect } from 'react';
+import HousePokerLogo from '@/components/HousePokerLogo';
 
 /* ─── Subtle gold dust particles ─── */
 function GoldDust() {
@@ -106,15 +107,13 @@ export default function Home() {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-6 sm:mb-8"
         >
-          <motion.img
-            src={ASSETS.logo}
-            alt="HOUSE POKER"
-            className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4"
-            style={{ filter: 'drop-shadow(0 4px 24px rgba(212,175,55,0.25))' }}
+          <motion.div
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-wide gold-text leading-tight">
+          >
+            <HousePokerLogo size={90} showText={false} />
+          </motion.div>
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-wide gold-text leading-tight mt-3">
             HOUSE POKER
           </h1>
           <div className="divider-gold w-32 sm:w-48 mx-auto mt-3 mb-3" />
