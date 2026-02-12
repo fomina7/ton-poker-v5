@@ -23,7 +23,7 @@ function normalizeRank(rank: string): string {
 interface PokerCardProps {
   card: { suit: string; rank: string };
   faceDown?: boolean;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   animate?: boolean;
   delay?: number;
   highlight?: boolean;
@@ -32,9 +32,10 @@ interface PokerCardProps {
 const SIZES = {
   xs: { w: 24, h: 34, rankFs: 9, suitFs: 7, centerFs: 12, corner: 3 },
   sm: { w: 32, h: 46, rankFs: 11, suitFs: 9, centerFs: 16, corner: 4 },
-  md: { w: 44, h: 63, rankFs: 14, suitFs: 11, centerFs: 22, corner: 5 },
-  lg: { w: 56, h: 80, rankFs: 17, suitFs: 13, centerFs: 28, corner: 6 },
-  xl: { w: 68, h: 97, rankFs: 20, suitFs: 16, centerFs: 34, corner: 7 },
+  md: { w: 48, h: 68, rankFs: 15, suitFs: 12, centerFs: 24, corner: 5 },
+  lg: { w: 60, h: 86, rankFs: 18, suitFs: 14, centerFs: 30, corner: 6 },
+  xl: { w: 74, h: 106, rankFs: 22, suitFs: 17, centerFs: 38, corner: 7 },
+  xxl: { w: 90, h: 128, rankFs: 26, suitFs: 20, centerFs: 46, corner: 8 },
 };
 
 /* Card back pattern - drawn with SVG */

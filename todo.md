@@ -206,3 +206,26 @@
 - [x] Verify all pages work correctly (Home, Lobby, Profile, Cashier, Tournaments, Admin)
 - [x] Run tests and fix any failures (43 tests passing)
 - [x] Save checkpoint and push to GitHub
+
+## v9 - Major Redesign (Reference Image Match)
+- [ ] GameTable: Dark luxury table matching reference image exactly
+- [ ] GameTable: Player name cards with gold borders, dark background
+- [ ] GameTable: Action badges below player cards (ALL-IN red, FOLD gray, CALL blue, RAISE green)
+- [ ] GameTable: Large community cards in center with white card design
+- [ ] GameTable: "TEXAS HOLD'EM" text below community cards
+- [ ] GameTable: Pot display with trophy/shield icon above community cards
+- [ ] GameTable: Timer with 0:XX format at top center
+- [ ] GameTable: DEALER badge on dealer player
+- [ ] GameTable: Hero cards large at bottom-left, tilted
+- [ ] GameTable: Big action buttons at bottom (FOLD gray, CHECK blue, RAISE green, ALL-IN red)
+- [ ] GameTable: Chip stacks next to players (programmatic)
+- [ ] GameTable: Gold coin balance display in top bar
+- [ ] Light and dark theme switching
+- [ ] Home page: real online stats (tables, players, bots)
+- [ ] Admin panel: tournament creation that actually works
+- [ ] Admin panel: add bots to tournaments
+- [ ] Fix ALL bugs across entire application
+- [ ] Every button must be functional (no demo/placeholder)
+- [ ] Verify game works end-to-end
+- [ ] Verify tournaments work end-to-end
+- [ ] Verify admin panel works end-to-end

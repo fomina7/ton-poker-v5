@@ -204,8 +204,19 @@ class GameManager {
       }
     }
     if (seatIndex === -1 || occupiedSeats.includes(seatIndex)) {
-      socket.emit("error", { message: "Table is full" });
-      return;
+      // If table is full, try to remove a bot to make room for human player
+      const botToRemove = room.state.players.find(p => p.isBot && p.folded);
+      const botToRemoveAny = botToRemove || room.state.players.find(p => p.isBot);
+      if (botToRemoveAny) {
+        console.log(`[WS] Removing bot ${botToRemoveAny.name} (seat ${botToRemoveAny.seatIndex}) to make room for human player`);
+        const botTimer = room.botTimers.get(botToRemoveAny.seatIndex);
+        if (botTimer) { clearTimeout(botTimer); room.botTimers.delete(botToRemoveAny.seatIndex); }
+        room.state.players = room.state.players.filter(p => p.seatIndex !== botToRemoveAny.seatIndex);
+        seatIndex = botToRemoveAny.seatIndex;
+      } else {
+        socket.emit("error", { message: "Table is full" });
+        return;
+      }
     }
 
     // Buy in
