@@ -1,6 +1,6 @@
 /*
- * PlayerSeat — Cyber Noir Casino theme
- * Renders a player seat around the poker table with avatar, chips, action badge
+ * PlayerSeat — HOUSE POKER
+ * Shows player avatar, name, chips, cards, bet, and turn timer
  */
 import { motion, AnimatePresence } from 'framer-motion';
 import { Player } from '@/lib/pokerEngine';
@@ -13,132 +13,117 @@ interface PlayerSeatProps {
   showCards: boolean;
   isHuman: boolean;
   position: { x: string; y: string };
+  isWinner?: boolean;
 }
 
-const ACTION_LABELS: Record<string, { text: string; cls: string }> = {
-  fold: { text: 'FOLD', cls: 'bg-red-900/70 text-red-300 border-red-700/40' },
-  check: { text: 'CHECK', cls: 'bg-cyan-900/70 text-cyan-300 border-cyan-700/40' },
-  call: { text: 'CALL', cls: 'bg-green-900/70 text-green-300 border-green-700/40' },
-  raise: { text: 'RAISE', cls: 'bg-amber-900/70 text-amber-300 border-amber-700/40' },
-  allin: { text: 'ALL IN', cls: 'bg-purple-900/70 text-purple-200 border-purple-600/40' },
-};
-
-export default function PlayerSeat({ player, isCurrentTurn, showCards, isHuman, position }: PlayerSeatProps) {
+export default function PlayerSeat({ player, isCurrentTurn, showCards, isHuman, position, isWinner }: PlayerSeatProps) {
   const avatarUrl = ASSETS.avatars[player.avatar as keyof typeof ASSETS.avatars] || ASSETS.avatars.fox;
-
-  // Don't render the human player seat on the table (they have their own card area below)
-  if (isHuman) {
-    return (
-      <motion.div
-        className="absolute flex flex-col items-center"
-        style={{ left: position.x, top: position.y, transform: 'translate(-50%, -50%)' }}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 200 }}
-      >
-        {/* Avatar */}
-        <div className="relative">
-          {isCurrentTurn && !player.folded && (
-            <motion.div
-              className="absolute -inset-1.5 rounded-full"
-              style={{
-                border: '2px solid #00F0FF',
-                boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)',
-              }}
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-          )}
-          <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${
-            player.folded ? 'opacity-30 grayscale border-gray-700' :
-            isCurrentTurn ? 'border-cyan-400' : 'border-gold/40'
-          }`}>
-            <img src={avatarUrl} alt={player.name} className="w-full h-full object-cover" />
-          </div>
-          {player.isDealer && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center text-[8px] font-black text-black">D</div>
-          )}
-        </div>
-        {/* Name + chips */}
-        <div className="rounded-lg px-2 py-0.5 text-center mt-1" style={{
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <div className="text-[9px] text-gray-300 font-medium">{player.name}</div>
-          <div className="text-[10px] font-bold text-gold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            {player.chips.toLocaleString()}
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
       className="absolute flex flex-col items-center gap-0.5"
       style={{ left: position.x, top: position.y, transform: 'translate(-50%, -50%)' }}
       initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 200, delay: player.seatIndex * 0.08 }}
+      animate={{ scale: 1, opacity: player.folded ? 0.4 : 1 }}
+      transition={{ type: 'spring', stiffness: 200, delay: player.seatIndex * 0.06 }}
     >
-      {/* Cards above avatar for bots during showdown */}
-      {showCards && player.holeCards.length > 0 && !player.folded && (
+      {/* Cards above avatar */}
+      {player.holeCards.length > 0 && !player.folded && (
         <div className="flex gap-0.5 mb-0.5">
-          {player.holeCards.map((card, i) => (
-            <PlayingCard key={i} card={card} small delay={i * 0.1} />
-          ))}
+          {showCards || isHuman ? (
+            player.holeCards.map((card, i) => (
+              <PlayingCard key={i} card={card} small delay={i * 0.1} />
+            ))
+          ) : (
+            player.holeCards.map((_, i) => (
+              <PlayingCard key={i} faceDown small delay={i * 0.1} />
+            ))
+          )}
         </div>
       )}
 
       {/* Avatar container */}
       <div className="relative">
-        {/* Turn indicator */}
+        {/* Turn glow ring */}
         {isCurrentTurn && !player.folded && (
           <motion.div
             className="absolute -inset-1.5 rounded-full"
             style={{
               border: '2px solid #00F0FF',
-              boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)',
+              boxShadow: '0 0 15px rgba(0, 240, 255, 0.5)',
             }}
-            animate={{ opacity: [0.4, 1, 0.4] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.2, repeat: Infinity }}
+          />
+        )}
+
+        {/* Winner glow */}
+        {isWinner && (
+          <motion.div
+            className="absolute -inset-1.5 rounded-full"
+            style={{
+              border: '2px solid #D4AF37',
+              boxShadow: '0 0 20px rgba(212,175,55,0.7)',
+            }}
+            animate={{ opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 0.8, repeat: Infinity }}
           />
         )}
 
         {/* Avatar */}
-        <div className={`w-11 h-11 rounded-full overflow-hidden border-2 ${
-          player.folded ? 'opacity-30 grayscale border-gray-700' :
-          isCurrentTurn ? 'border-cyan-400' : 'border-gold/40'
-        }`}>
+        <div
+          className="w-11 h-11 rounded-full overflow-hidden"
+          style={{
+            border: isWinner ? '2px solid #D4AF37'
+              : isCurrentTurn ? '2px solid #00F0FF'
+              : '2px solid rgba(255,255,255,0.15)',
+            filter: player.folded ? 'grayscale(1)' : 'none',
+          }}
+        >
           <img src={avatarUrl} alt={player.name} className="w-full h-full object-cover" />
         </div>
 
-        {/* Dealer / SB / BB badge */}
+        {/* D / S / B badge */}
         {(player.isDealer || player.isSB || player.isBB) && (
-          <div className={`absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full flex items-center justify-center text-[7px] font-black ${
-            player.isDealer ? 'bg-yellow-500 text-black' :
-            player.isSB ? 'bg-blue-500 text-white' :
-            'bg-red-500 text-white'
-          }`} style={{ width: '18px', height: '18px' }}>
+          <div
+            className="absolute -bottom-0.5 -right-0.5 w-[16px] h-[16px] rounded-full flex items-center justify-center text-[7px] font-black"
+            style={{
+              background: player.isDealer ? '#D4AF37' : player.isSB ? '#4CAF50' : '#2196F3',
+              color: player.isDealer ? '#1a1a0a' : '#fff',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              fontFamily: "'JetBrains Mono', monospace",
+            }}
+          >
             {player.isDealer ? 'D' : player.isSB ? 'S' : 'B'}
           </div>
         )}
       </div>
 
-      {/* Name + chips */}
-      <div className="rounded-lg px-2 py-0.5 text-center min-w-[60px]" style={{
-        background: 'rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255,255,255,0.06)',
-      }}>
-        <div className="text-[9px] text-gray-300 font-medium truncate max-w-[70px]">{player.name}</div>
-        <div className="text-[10px] font-bold text-gold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          {player.chips.toLocaleString()}
+      {/* Name + chips bar */}
+      <div
+        className="rounded-lg px-2 py-0.5 text-center mt-0.5 min-w-[56px]"
+        style={{
+          background: isWinner
+            ? 'linear-gradient(135deg, rgba(212,175,55,0.25) 0%, rgba(184,134,11,0.15) 100%)'
+            : 'rgba(10,10,20,0.8)',
+          border: isWinner ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
+        <div className="text-[9px] font-medium truncate max-w-[64px]"
+          style={{ color: player.folded ? 'rgba(255,255,255,0.3)' : '#ddd' }}>
+          {player.name}
+        </div>
+        <div className="text-[10px] font-bold"
+          style={{
+            color: isWinner ? '#D4AF37' : '#4CAF50',
+            fontFamily: "'JetBrains Mono', monospace",
+          }}>
+          {player.chips.toFixed(0)}
         </div>
       </div>
 
-      {/* Bet amount */}
+      {/* Bet badge */}
       <AnimatePresence>
         {player.bet > 0 && (
           <motion.div
@@ -147,29 +132,44 @@ export default function PlayerSeat({ player, isCurrentTurn, showCards, isHuman, 
             exit={{ scale: 0 }}
             className="flex items-center gap-0.5"
           >
-            <img src={ASSETS.chips.gold} alt="" className="w-3.5 h-3.5" />
-            <span className="text-[9px] font-bold text-amber-300" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-              {player.bet.toLocaleString()}
-            </span>
+            <div className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+              style={{
+                background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
+                color: '#1a1a0a',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>
+              {player.bet.toFixed(0)}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Action badge */}
+      {/* Action label */}
       <AnimatePresence>
-        {player.lastAction && (
+        {player.lastAction && !player.folded && (
           <motion.div
-            initial={{ scale: 0, y: 5 }}
+            initial={{ scale: 0, y: 4 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0, opacity: 0 }}
-            className={`px-1.5 py-0.5 rounded-full text-[7px] font-bold border ${
-              ACTION_LABELS[player.lastAction]?.cls || 'bg-gray-800 text-gray-300 border-gray-600'
-            }`}
+            className="text-[8px] font-bold uppercase tracking-wider"
+            style={{
+              color: player.lastAction === 'fold' ? '#EF5350'
+                : player.lastAction === 'raise' || player.lastAction === 'allin' ? '#D4AF37'
+                : player.lastAction === 'call' ? '#4CAF50'
+                : '#00F0FF',
+            }}
           >
-            {ACTION_LABELS[player.lastAction]?.text || player.lastAction.toUpperCase()}
+            {player.lastAction === 'allin' ? 'ALL IN' : player.lastAction}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Hand result */}
+      {player.handResult && !player.folded && (
+        <div className="text-[8px] font-medium text-amber-300 whitespace-nowrap">
+          {player.handResult.name}
+        </div>
+      )}
     </motion.div>
   );
 }

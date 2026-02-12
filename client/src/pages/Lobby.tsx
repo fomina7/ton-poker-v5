@@ -64,7 +64,7 @@ export default function Lobby() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold gold-text" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-              TON POKER
+              HOUSE POKER
             </h1>
             <p className="text-[10px] text-gray-500 mt-0.5 uppercase tracking-wider">Premium Poker Platform</p>
           </div>

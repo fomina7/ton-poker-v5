@@ -7,10 +7,10 @@ import {
 import { AVATAR_LIST } from '@/lib/assets';
 import { Card } from '@/lib/assets';
 
-const BOT_NAMES = ['SharkBite', 'OwlEye', 'FoxTrick', 'BearClaw', 'WolfFang', 'MonkeyKing', 'PenguinAce', 'KoalaChill'];
+const BOT_NAMES = ['SharkBite', 'OwlEye', 'FoxTrick', 'BearClaw', 'WolfFang'];
 
-function createBotPlayers(count: number, startChips: number = 10000): Player[] {
-  const avatarKeys = ['shark', 'owl', 'fox', 'bear', 'wolf', 'monkey', 'penguin', 'koala'];
+function createBotPlayers(count: number, startChips: number): Player[] {
+  const avatarKeys = ['shark', 'owl', 'fox', 'bear', 'wolf'];
   return Array.from({ length: count }, (_, i) => ({
     id: `bot-${i}`,
     name: BOT_NAMES[i % BOT_NAMES.length],
@@ -30,18 +30,33 @@ function createBotPlayers(count: number, startChips: number = 10000): Player[] {
   }));
 }
 
-export function usePokerGame(playerCount: number = 6, blinds: [number, number] = [10, 20]) {
+export function usePokerGame(playerCount: number = 6, blinds: [number, number] = [5, 10]) {
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showdown, setShowdown] = useState(false);
+  const [autoDealing, setAutoDealing] = useState(false);
+  const [preAction, setPreAction] = useState<'checkFold' | 'callAny' | 'foldToBet' | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoDealRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-deal: after showdown, wait 3s then start new hand
+  useEffect(() => {
+    if (showdown && gameState) {
+      autoDealRef.current = setTimeout(() => {
+        startNewHand(gameState);
+      }, 3000);
+      return () => {
+        if (autoDealRef.current) clearTimeout(autoDealRef.current);
+      };
+    }
+  }, [showdown]);
 
   const initGame = useCallback(() => {
+    const startChips = 1000;
     const humanPlayer: Player = {
       id: 'human',
-      name: 'You',
+      name: 'Pro',
       avatar: 'cat',
-      chips: 10000,
+      chips: startChips,
       holeCards: [],
       bet: 0,
       totalBet: 0,
@@ -54,7 +69,7 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
       seatIndex: 0,
       lastAction: undefined,
     };
-    const bots = createBotPlayers(playerCount - 1, 10000);
+    const bots = createBotPlayers(playerCount - 1, startChips);
     const players = [humanPlayer, ...bots];
     
     const state: GameState = {
@@ -80,10 +95,22 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
 
   const startNewHand = useCallback((prevState?: GameState) => {
     setShowdown(false);
+    setPreAction(null);
     const base = prevState || gameState;
     if (!base) return;
 
-    const activePlayers = base.players.filter(p => p.chips > 0);
+    // Remove busted players, rebuy bots
+    const players: Player[] = base.players.map(p => {
+      if (p.chips <= 0 && p.id !== 'human') {
+        return { ...p, chips: 1000 }; // bot rebuy
+      }
+      if (p.chips <= 0 && p.id === 'human') {
+        return { ...p, chips: 1000 }; // human rebuy
+      }
+      return { ...p };
+    });
+
+    const activePlayers = players.filter(p => p.chips > 0);
     if (activePlayers.length < 2) return;
 
     const deck = createDeck();
@@ -91,7 +118,7 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
     const sbIdx = (dealerIdx + 1) % activePlayers.length;
     const bbIdx = (dealerIdx + 2) % activePlayers.length;
 
-    const players: Player[] = activePlayers.map((p, i) => ({
+    const newPlayers: Player[] = activePlayers.map((p, i) => ({
       ...p,
       holeCards: [deck.pop()!, deck.pop()!],
       bet: 0,
@@ -107,21 +134,21 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
     }));
 
     // Post blinds
-    const sbAmount = Math.min(players[sbIdx].chips, base.smallBlind);
-    players[sbIdx].chips -= sbAmount;
-    players[sbIdx].bet = sbAmount;
-    players[sbIdx].totalBet = sbAmount;
+    const sbAmount = Math.min(newPlayers[sbIdx].chips, base.smallBlind);
+    newPlayers[sbIdx].chips -= sbAmount;
+    newPlayers[sbIdx].bet = sbAmount;
+    newPlayers[sbIdx].totalBet = sbAmount;
 
-    const bbAmount = Math.min(players[bbIdx].chips, base.bigBlind);
-    players[bbIdx].chips -= bbAmount;
-    players[bbIdx].bet = bbAmount;
-    players[bbIdx].totalBet = bbAmount;
+    const bbAmount = Math.min(newPlayers[bbIdx].chips, base.bigBlind);
+    newPlayers[bbIdx].chips -= bbAmount;
+    newPlayers[bbIdx].bet = bbAmount;
+    newPlayers[bbIdx].totalBet = bbAmount;
 
-    const firstToAct = (bbIdx + 1) % players.length;
+    const firstToAct = (bbIdx + 1) % newPlayers.length;
 
     const newState: GameState = {
       phase: 'preflop',
-      players,
+      players: newPlayers,
       communityCards: [],
       pot: sbAmount + bbAmount,
       sidePots: [],
@@ -137,8 +164,7 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
 
     setGameState(newState);
     
-    // If first to act is a bot, trigger bot action
-    if (players[firstToAct].id !== 'human') {
+    if (newPlayers[firstToAct].id !== 'human') {
       setTimeout(() => processBotTurn(newState), 800);
     }
   }, [gameState]);
@@ -178,10 +204,9 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
         break;
       }
       case 'raise': {
-        const raiseAmt = Math.min(amount, player.chips);
         const callFirst = getCallAmount(player, newState);
-        const totalNeeded = Math.max(raiseAmt, callFirst + newState.minRaise);
-        const actualAmount = Math.min(totalNeeded, player.chips);
+        const raiseAmt = Math.max(amount, callFirst + newState.minRaise);
+        const actualAmount = Math.min(raiseAmt, player.chips);
         player.chips -= actualAmount;
         player.bet += actualAmount;
         player.totalBet += actualAmount;
@@ -224,7 +249,6 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
     let nextIdx = (newState.currentPlayerIndex + 1) % newState.players.length;
     let checked = 0;
 
-    // Find next active player
     while (checked < newState.players.length) {
       const p = newState.players[nextIdx];
       if (!p.folded && !p.isAllIn) break;
@@ -246,17 +270,42 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
     newState.currentPlayerIndex = nextIdx;
     setGameState(newState);
 
+    // Handle pre-actions for human
+    if (newState.players[nextIdx].id === 'human' && preAction) {
+      const callAmt = getCallAmount(newState.players[nextIdx], newState);
+      if (preAction === 'checkFold') {
+        if (callAmt === 0) {
+          setTimeout(() => executeAction(newState, 'check'), 300);
+        } else {
+          setTimeout(() => executeAction(newState, 'fold'), 300);
+        }
+        setPreAction(null);
+        return;
+      } else if (preAction === 'callAny') {
+        setTimeout(() => executeAction(newState, callAmt > 0 ? 'call' : 'check', callAmt), 300);
+        setPreAction(null);
+        return;
+      } else if (preAction === 'foldToBet') {
+        if (callAmt > 0) {
+          setTimeout(() => executeAction(newState, 'fold'), 300);
+          setPreAction(null);
+          return;
+        }
+        // If no bet, wait for player
+        setPreAction(null);
+      }
+    }
+
     // If next player is bot, trigger bot action
     if (newState.players[nextIdx].id !== 'human' && !newState.players[nextIdx].folded && !newState.players[nextIdx].isAllIn) {
       const delay = 600 + Math.random() * 800;
       timeoutRef.current = setTimeout(() => processBotTurn(newState), delay);
     }
-  }, [processBotTurn]);
+  }, [processBotTurn, preAction]);
 
   const advancePhase = useCallback((state: GameState) => {
     const newState = { ...state, players: state.players.map(p => ({ ...p })) };
     
-    // Reset bets for new round
     for (const p of newState.players) {
       p.bet = 0;
       p.lastAction = undefined;
@@ -286,7 +335,6 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
 
     newState.phase = nextPhase as GamePhase;
     
-    // Find first active player after dealer
     let firstIdx = (newState.dealerIndex + 1) % newState.players.length;
     let attempts = 0;
     while (attempts < newState.players.length) {
@@ -295,12 +343,10 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
       attempts++;
     }
 
-    // If all remaining players are all-in, run out the board
     const activePlayers = newState.players.filter(p => !p.folded && !p.isAllIn);
     if (activePlayers.length <= 1) {
       newState.currentPlayerIndex = firstIdx;
       setGameState(newState);
-      // Auto-advance to next phase
       setTimeout(() => advancePhase(newState), 1000);
       return;
     }
@@ -319,12 +365,10 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
 
     const playersInHand = newState.players.filter(p => !p.folded);
     
-    // Evaluate all hands
     for (const p of playersInHand) {
       p.handResult = evaluateHand(p.holeCards, newState.communityCards);
     }
 
-    // Find winner(s)
     const sorted = [...playersInHand].sort((a, b) => (b.handResult?.score || 0) - (a.handResult?.score || 0));
     const bestScore = sorted[0]?.handResult?.score || 0;
     const winners = sorted.filter(p => p.handResult?.score === bestScore);
@@ -349,22 +393,24 @@ export function usePokerGame(playerCount: number = 6, blinds: [number, number] =
     if (!gameState) return;
     const current = gameState.players[gameState.currentPlayerIndex];
     if (current.id !== 'human') return;
+    setPreAction(null);
     executeAction(gameState, action, amount);
   }, [gameState, executeAction]);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (autoDealRef.current) clearTimeout(autoDealRef.current);
     };
   }, []);
 
   return {
     gameState,
-    isAnimating,
     showdown,
     initGame,
     startNewHand,
     playerAction,
-    setGameState,
+    preAction,
+    setPreAction,
   };
 }

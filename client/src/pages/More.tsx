@@ -141,7 +141,7 @@ export default function More() {
 
         {/* App info */}
         <div className="text-center mt-8 mb-4">
-          <p className="text-xs text-gray-600">TON Poker v1.0.0</p>
+          <p className="text-xs text-gray-600">HOUSE POKER v1.0.0</p>
           <p className="text-[10px] text-gray-700 mt-1">Play responsibly. 18+ only.</p>
         </div>
       </div>

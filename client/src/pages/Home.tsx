@@ -1,6 +1,6 @@
 /*
  * Home — Cyber Noir Casino theme
- * Landing / splash screen for TON Poker
+ * Landing / splash screen for HOUSE POKER
  */
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
@@ -66,7 +66,7 @@ export default function Home() {
           <img src={ASSETS.ui.crown} alt="" className="w-14 h-14" />
         </motion.div>
         <h1 className="text-5xl font-black tracking-wider mb-2 gold-text" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-          TON POKER
+          HOUSE POKER
         </h1>
         <p className="text-gray-400 text-sm tracking-widest uppercase">Premium Texas Hold'em</p>
       </motion.div>
