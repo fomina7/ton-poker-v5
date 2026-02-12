@@ -158,6 +158,7 @@ class GameManager {
         handNumber: 0,
         actionDeadline: 0,
         lastRaiserSeat: -1,
+        raisesThisStreet: 0,
         rake: rakeConfig,
         rakeCollected: 0,
         totalPotBeforeRake: 0,

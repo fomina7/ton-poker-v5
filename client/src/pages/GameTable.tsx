@@ -664,7 +664,7 @@ export default function GameTable() {
       </AnimatePresence>
 
       {/* ─── Action Panel ─── */}
-      <div className="shrink-0 relative z-30" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="shrink-0 relative z-30" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
         {gameState.phase === 'waiting' ? (
           <div className="px-3 py-3 text-center" style={{
             background: 'rgba(4,4,6,0.95)',

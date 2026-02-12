@@ -121,7 +121,7 @@
 - [x] Admin panel: view player cards at tables
 - [x] Admin panel: table monitoring (live view of all tables)
 - [x] Fix mobile responsiveness across all pages
-- [ ] Push to GitHub as new version
+- [x] Push to GitHub as new version
 
 ## Complete Rewrite - Real Poker Engine (v4)
 - [x] Real poker engine: proper deck, shuffle, hand evaluation (Royal Flush to High Card)
@@ -138,4 +138,9 @@
 - [x] Game manager: proper hand history logging to DB
 - [x] Game manager: reconnect handling, auto-fold on timeout
 - [x] GameTable UI: work with new engine, show rake taken
-- [ ] Push to GitHub as new version
+- [x] Push to GitHub as new version
+
+## Bug Fix: Poker Not Working (User Report)
+- [x] Diagnose why poker game doesn't work (findNextActionSeat bug - used players.length instead of max seat index)
+- [x] Fix all blocking issues (seat iteration, bot raise amounts, raise cap per street)
+- [x] Verify full game cycle works end-to-end (hands complete through all phases with rake)

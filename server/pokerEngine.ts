@@ -62,6 +62,7 @@ export interface GameState {
   handNumber: number;
   actionDeadline: number;
   lastRaiserSeat: number;
+  raisesThisStreet: number; // count of raises this street (cap at 4)
   rake: RakeConfig;
   rakeCollected: number; // rake taken this hand
   totalPotBeforeRake: number; // for display
@@ -201,11 +202,12 @@ export function compareHands(a: HandResult, b: HandResult): number {
  * Find the next active (not folded, not sitting out, not disconnected, has chips) seat
  */
 export function findNextActiveSeat(state: GameState, currentSeat: number): number {
-  const maxSeats = state.players.length;
-  if (maxSeats === 0) return currentSeat;
+  // Use max possible seat index (not players.length, since seats may not be sequential)
+  const maxSeatIndex = Math.max(...state.players.map(p => p.seatIndex), 0) + 1;
+  const totalSlots = Math.max(maxSeatIndex, 9); // at least 9 seats
   let seat = currentSeat;
-  for (let i = 0; i < maxSeats; i++) {
-    seat = (seat + 1) % maxSeats;
+  for (let i = 0; i < totalSlots; i++) {
+    seat = (seat + 1) % totalSlots;
     const player = state.players.find(p => p.seatIndex === seat);
     if (player && !player.folded && !player.sittingOut && !player.disconnected && player.chipStack > 0) {
       return seat;
@@ -218,11 +220,12 @@ export function findNextActiveSeat(state: GameState, currentSeat: number): numbe
  * Find next player who can still act (not folded, not all-in)
  */
 function findNextActionSeat(state: GameState, currentSeat: number): number {
-  const maxSeats = state.players.length;
-  if (maxSeats === 0) return -1;
+  // Use max possible seat index (not players.length, since seats may not be sequential)
+  const maxSeatIndex = Math.max(...state.players.map(p => p.seatIndex), 0) + 1;
+  const totalSlots = Math.max(maxSeatIndex, 9); // at least 9 seats
   let seat = currentSeat;
-  for (let i = 0; i < maxSeats; i++) {
-    seat = (seat + 1) % maxSeats;
+  for (let i = 0; i < totalSlots; i++) {
+    seat = (seat + 1) % totalSlots;
     const player = state.players.find(p => p.seatIndex === seat);
     if (player && !player.folded && !player.allIn && !player.sittingOut && !player.disconnected) {
       return seat;
@@ -249,6 +252,7 @@ export function createNewHand(state: GameState): GameState {
     pots: [],
     handNumber: state.handNumber + 1,
     lastRaiserSeat: -1,
+    raisesThisStreet: 0,
     rakeCollected: 0,
     totalPotBeforeRake: 0,
   };
@@ -361,6 +365,26 @@ export function processAction(
     }
 
     case "raise": {
+      // Cap raises at 4 per street (standard poker rule)
+      const MAX_RAISES_PER_STREET = 4;
+      if (newState.raisesThisStreet >= MAX_RAISES_PER_STREET) {
+        // Convert to call if raise cap reached
+        const toCall = newState.currentBet - player.currentBet;
+        if (toCall > 0) {
+          const callAmt = Math.min(toCall, player.chipStack);
+          player.chipStack -= callAmt;
+          player.currentBet += callAmt;
+          player.totalBetThisHand += callAmt;
+          player.lastAction = "CALL";
+          player.hasActedThisRound = true;
+          if (player.chipStack === 0) player.allIn = true;
+        } else {
+          player.lastAction = "CHECK";
+          player.hasActedThisRound = true;
+        }
+        break;
+      }
+
       // amount = total bet the player wants to have this street
       const raiseToTotal = amount || (newState.currentBet + newState.minRaise);
       // Ensure minimum raise
@@ -377,6 +401,7 @@ export function processAction(
         newState.minRaise = newBet - newState.currentBet;
         newState.currentBet = newBet;
         newState.lastRaiserSeat = seatIndex;
+        newState.raisesThisStreet++;
         // Reset hasActedThisRound for everyone else (they need to act again)
         for (const p of newState.players) {
           if (p.seatIndex !== seatIndex && !p.folded && !p.allIn) {
@@ -438,7 +463,8 @@ export function processAction(
   }
 
   // Check if betting round is complete
-  if (isBettingRoundComplete(newState)) {
+  const roundComplete = isBettingRoundComplete(newState);
+  if (roundComplete) {
     return advancePhase(newState);
   }
 
@@ -610,6 +636,7 @@ function advancePhase(state: GameState): GameState {
   newState.currentBet = 0;
   newState.minRaise = newState.bigBlind;
   newState.lastRaiserSeat = -1;
+  newState.raisesThisStreet = 0;
 
   switch (newState.phase) {
     case "preflop":
@@ -784,6 +811,7 @@ export function getBotAction(
     state.players.reduce((s, p) => s + p.currentBet, 0);
   const difficulty = botPlayer.botDifficulty || "medium";
   const rand = Math.random();
+  const canRaise = (state.raisesThisStreet || 0) < 4;
 
   // Evaluate hand strength
   let handStrength = 0;
@@ -793,21 +821,30 @@ export function getBotAction(
     handStrength = evaluateBestHand(botPlayer.holeCards, state.communityCards).rank;
   }
 
+  let result: { action: "fold" | "check" | "call" | "raise" | "allin"; amount?: number };
   if (difficulty === "beginner") {
-    return beginnerBotAction(callAmount, botPlayer, state, rand, handStrength);
+    result = beginnerBotAction(callAmount, botPlayer, state, rand, handStrength);
+  } else if (difficulty === "pro") {
+    result = proBotAction(callAmount, botPlayer, state, rand, handStrength, potSize);
+  } else {
+    result = mediumBotAction(callAmount, botPlayer, state, rand, handStrength, potSize);
   }
-  if (difficulty === "pro") {
-    return proBotAction(callAmount, botPlayer, state, rand, handStrength, potSize);
+
+  // If raise cap reached, convert raise to call/check
+  if (result.action === "raise" && !canRaise) {
+    result = callAmount > 0 ? { action: "call" } : { action: "check" };
   }
-  return mediumBotAction(callAmount, botPlayer, state, rand, handStrength, potSize);
+
+  return result;
 }
 
 function beginnerBotAction(
   callAmount: number, player: PlayerState, state: GameState, rand: number, handStrength: number
 ): { action: "fold" | "check" | "call" | "raise" | "allin"; amount?: number } {
   if (callAmount <= 0) {
-    // No bet to call
-    if (rand < 0.7) return { action: "check" };
+    // No bet to call — check or raise
+    if (rand < 0.75) return { action: "check" };
+    // Raise to currentBet + 1 BB (total bet)
     return { action: "raise", amount: state.currentBet + state.bigBlind };
   }
   if (callAmount > player.chipStack * 0.5) return { action: "fold" };
@@ -819,15 +856,16 @@ function mediumBotAction(
   callAmount: number, player: PlayerState, state: GameState, rand: number, handStrength: number, potSize: number
 ): { action: "fold" | "check" | "call" | "raise" | "allin"; amount?: number } {
   if (callAmount <= 0) {
-    if (handStrength >= 4) return { action: "raise", amount: state.bigBlind * 3 };
-    if (rand < 0.6) return { action: "check" };
-    return { action: "raise", amount: state.bigBlind * 2 };
+    // No bet to call — check or raise
+    if (handStrength >= 4) return { action: "raise", amount: state.currentBet + state.bigBlind * 3 };
+    if (rand < 0.65) return { action: "check" };
+    return { action: "raise", amount: state.currentBet + state.bigBlind * 2 };
   }
   
   // Pot odds consideration
   const potOdds = callAmount / (potSize + callAmount);
   if (handStrength >= 5) {
-    return rand < 0.3 
+    return rand < 0.25 
       ? { action: "raise", amount: state.currentBet + state.bigBlind * 3 }
       : { action: "call" };
   }
@@ -842,25 +880,27 @@ function proBotAction(
   callAmount: number, player: PlayerState, state: GameState, rand: number, handStrength: number, potSize: number
 ): { action: "fold" | "check" | "call" | "raise" | "allin"; amount?: number } {
   if (callAmount <= 0) {
+    // No bet to call — check or raise
     if (handStrength >= 6) {
-      return { action: "raise", amount: Math.max(state.bigBlind * 3, Math.floor(potSize * 0.75)) };
+      const raiseSize = Math.max(state.bigBlind * 3, Math.floor(potSize * 0.65));
+      return { action: "raise", amount: state.currentBet + raiseSize };
     }
     if (handStrength >= 3) {
-      return rand < 0.5
-        ? { action: "raise", amount: state.bigBlind * 2 + state.currentBet }
+      return rand < 0.45
+        ? { action: "raise", amount: state.currentBet + state.bigBlind * 2 }
         : { action: "check" };
     }
     // Bluff sometimes
-    if (rand < 0.15) return { action: "raise", amount: state.bigBlind * 2 + state.currentBet };
+    if (rand < 0.12) return { action: "raise", amount: state.currentBet + state.bigBlind * 2 };
     return { action: "check" };
   }
 
   // Facing a bet
   if (handStrength >= 7) {
-    return rand < 0.4 ? { action: "allin" } : { action: "raise", amount: state.currentBet * 2 + state.bigBlind };
+    return rand < 0.35 ? { action: "allin" } : { action: "raise", amount: state.currentBet + Math.floor(potSize * 0.7) };
   }
   if (handStrength >= 5) {
-    return { action: "raise", amount: state.currentBet + Math.floor(potSize * 0.6) };
+    return { action: "raise", amount: state.currentBet + Math.floor(potSize * 0.5) };
   }
   if (handStrength >= 3) return { action: "call" };
   
