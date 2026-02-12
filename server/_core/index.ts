@@ -7,7 +7,135 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { gameManager } from "../gameManager";
 
+/**
+ * Run database migrations using raw SQL via mysql2.
+ * This ensures tables exist before the server starts accepting requests.
+ */
+async function runMigrations() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.log("[Migrate] No DATABASE_URL set, skipping migrations");
+    return;
+  }
+
+  try {
+    const mysql2 = await import("mysql2/promise");
+    const fs = await import("fs");
+    const path = await import("path");
+
+    console.log("[Migrate] Connecting to database...");
+    const connection = await mysql2.createConnection(dbUrl);
+
+    // Create migrations tracking table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS __drizzle_migrations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        migration_name VARCHAR(256) NOT NULL UNIQUE,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Get already applied migrations
+    const [applied] = await connection.execute(
+      "SELECT migration_name FROM __drizzle_migrations"
+    );
+    const appliedSet = new Set(
+      (applied as any[]).map((r: any) => r.migration_name)
+    );
+
+    // Find SQL migration files - check multiple possible locations
+    let drizzleDir = "";
+    const possiblePaths = [
+      path.resolve("drizzle"),
+      path.resolve(import.meta.dirname, "../../drizzle"),
+      path.resolve(import.meta.dirname, "../drizzle"),
+      "/app/drizzle",
+    ];
+
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        drizzleDir = p;
+        break;
+      }
+    }
+
+    if (!drizzleDir) {
+      console.log(
+        "[Migrate] No drizzle directory found, skipping file-based migrations"
+      );
+      await connection.end();
+      return;
+    }
+
+    const sqlFiles = fs
+      .readdirSync(drizzleDir)
+      .filter((f: string) => f.endsWith(".sql"))
+      .sort();
+
+    console.log(
+      `[Migrate] Found ${sqlFiles.length} migration files in ${drizzleDir}`
+    );
+
+    for (const file of sqlFiles) {
+      if (appliedSet.has(file)) {
+        console.log(`[Migrate] Skipping ${file} (already applied)`);
+        continue;
+      }
+
+      console.log(`[Migrate] Applying ${file}...`);
+      const sql = fs.readFileSync(path.join(drizzleDir, file), "utf-8");
+
+      // Split by statement breakpoint marker
+      const statements = sql
+        .split("--> statement-breakpoint")
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
+
+      for (const stmt of statements) {
+        try {
+          await connection.execute(stmt);
+        } catch (err: any) {
+          // Ignore "already exists" / "duplicate column" errors
+          if (
+            err.code === "ER_TABLE_EXISTS_ERROR" ||
+            err.code === "ER_DUP_FIELDNAME" ||
+            err.code === "ER_DUP_KEYNAME" ||
+            err.errno === 1060 ||
+            err.errno === 1061 ||
+            err.errno === 1050
+          ) {
+            console.log(`[Migrate]   (skipped: ${err.message})`);
+          } else {
+            console.error(`[Migrate] Error in ${file}: ${err.message}`);
+            console.error(
+              `[Migrate] Statement: ${stmt.substring(0, 200)}...`
+            );
+            throw err;
+          }
+        }
+      }
+
+      // Record migration as applied
+      await connection.execute(
+        "INSERT INTO __drizzle_migrations (migration_name) VALUES (?)",
+        [file]
+      );
+      console.log(`[Migrate] Applied ${file}`);
+    }
+
+    await connection.end();
+    console.log("[Migrate] All migrations complete");
+  } catch (err) {
+    console.error("[Migrate] Migration error:", err);
+    // Don't crash the server - let it try to start anyway
+    // Tables might already exist from a previous run
+  }
+}
+
 async function startServer() {
+  // Run migrations FIRST before anything else
+  await runMigrations();
+
   const app = express();
   const server = createServer(app);
 
