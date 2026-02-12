@@ -325,8 +325,8 @@
 - [x] Verify deployment: Cards dealt, actions work (FOLD/CHECK/RAISE/ALL-IN)
 
 ## v14 - Railway Bug Fixes
-- [ ] Fix guest login not working on Railway
-- [ ] Fix game not playable on Railway
-- [ ] Verify registration works on Railway
-- [ ] Verify full game flow works on Railway (register -> login -> lobby -> join table -> play)
-- [ ] Test and fix all errors found during testing
+- [x] Fix guest login not working on Railway (guest login was working, issue was WebSocket)
+- [x] Fix game not playable on Railway (socket.io polling-only transport for HTTP/2 compatibility)
+- [x] Verify registration works on Railway (email/password registration tested)
+- [x] Verify full game flow works on Railway (register -> login -> lobby -> join table -> play)
+- [x] Test and fix all errors found during testing (WebSocket disconnect, transport upgrade failure)
