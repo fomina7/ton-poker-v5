@@ -46,6 +46,7 @@ export interface RakeConfig {
 
 export interface GameState {
   tableId: number;
+  gameType: "holdem" | "omaha"; // Type of poker game
   phase: Phase;
   communityCards: Card[];
   deck: Card[];
@@ -99,7 +100,12 @@ export interface HandResult {
   values: number[]; // for tiebreaking, descending
 }
 
-export function evaluateBestHand(holeCards: Card[], communityCards: Card[]): HandResult {
+export function evaluateBestHand(holeCards: Card[], communityCards: Card[], gameType: "holdem" | "omaha" = "holdem"): HandResult {
+  if (gameType === "omaha") {
+    return evaluateBestHandOmaha(holeCards, communityCards);
+  }
+  
+  // Texas Hold'em: use any combination of hole + community cards
   const allCards = [...holeCards, ...communityCards];
   if (allCards.length < 5) {
     return { rank: -1, name: "Incomplete", values: [] };
@@ -112,6 +118,34 @@ export function evaluateBestHand(holeCards: Card[], communityCards: Card[]): Han
       best = result;
     }
   }
+  return best;
+}
+
+/**
+ * Omaha: must use exactly 2 hole cards + exactly 3 community cards
+ */
+function evaluateBestHandOmaha(holeCards: Card[], communityCards: Card[]): HandResult {
+  if (holeCards.length < 2 || communityCards.length < 3) {
+    return { rank: -1, name: "Incomplete", values: [] };
+  }
+  
+  let best: HandResult = { rank: -1, name: "", values: [] };
+  
+  // Try all combinations of 2 hole cards
+  const holeCombos = getCombinations(holeCards, 2);
+  // Try all combinations of 3 community cards
+  const communityCombos = getCombinations(communityCards, 3);
+  
+  for (const holeCombo of holeCombos) {
+    for (const communityCombo of communityCombos) {
+      const fiveCards = [...holeCombo, ...communityCombo];
+      const result = evaluateHand(fiveCards);
+      if (compareHands(result, best) > 0) {
+        best = result;
+      }
+    }
+  }
+  
   return best;
 }
 
@@ -296,10 +330,14 @@ export function createNewHand(state: GameState): GameState {
   bbPlayer.totalBetThisHand = bbAmount;
   if (bbPlayer.chipStack === 0) bbPlayer.allIn = true;
 
-  // Deal hole cards
+  // Deal hole cards (2 for Hold'em, 4 for Omaha)
+  const cardsPerPlayer = newState.gameType === "omaha" ? 4 : 2;
   for (const p of newState.players) {
     if (!p.folded) {
-      p.holeCards = [newState.deck.pop()!, newState.deck.pop()!];
+      p.holeCards = [];
+      for (let i = 0; i < cardsPerPlayer; i++) {
+        p.holeCards.push(newState.deck.pop()!);
+      }
     }
   }
 
@@ -736,7 +774,7 @@ function resolveWinner(state: GameState): GameState {
   // Evaluate hands for all active players
   const handResults = new Map<number, HandResult>();
   for (const p of activePlayers) {
-    handResults.set(p.seatIndex, evaluateBestHand(p.holeCards, newState.communityCards));
+    handResults.set(p.seatIndex, evaluateBestHand(p.holeCards, newState.communityCards, newState.gameType));
   }
 
   let totalRake = 0;

@@ -884,11 +884,15 @@ export default function GameTable() {
                   </div>
                 </div>
               ))}
-              {showdownOverlay.pots.map((pot: any, i: number) => (
-                <div key={i} className="text-sm text-amber-300 font-bold font-mono mt-2">
-                  Pot: {formatChipAmount(pot.amount)}
-                </div>
-              ))}
+              {(() => {
+                const totalPot = showdownOverlay.pots.reduce((sum: number, pot: any) => sum + pot.amount, 0);
+                const displayPot = gameState?.totalPotBeforeRake || totalPot;
+                return (
+                  <div className="text-sm text-amber-300 font-bold font-mono mt-2">
+                    Pot: {formatChipAmount(displayPot)}
+                  </div>
+                );
+              })()}
             </motion.div>
           </motion.div>
         )}

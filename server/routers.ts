@@ -7,6 +7,7 @@ import { users, gameTables, handHistory, transactions, adminLogs, botConfigs, ra
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { gameManager } from "./gameManager";
+import { tournamentManager } from "./TournamentManager";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
@@ -937,96 +938,23 @@ export const appRouter = router({
     register: protectedProcedure.input(z.object({
       tournamentId: z.number(),
     })).mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("DB unavailable");
-
-      const [tournament] = await db.select().from(tournaments).where(eq(tournaments.id, input.tournamentId));
-      if (!tournament) throw new Error("Tournament not found");
-      if (tournament.status !== "registering") throw new Error("Registration closed");
-      if (tournament.currentPlayers >= tournament.maxPlayers) throw new Error("Tournament full");
-
-      // Check if already registered
-      const existing = await db.select().from(tournamentEntries)
-        .where(and(
-          eq(tournamentEntries.tournamentId, input.tournamentId),
-          eq(tournamentEntries.userId, ctx.user.id)
-        ));
-      if (existing.length > 0) throw new Error("Already registered");
-
-      // Deduct buy-in
-      if (tournament.buyIn > 0) {
-        const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id));
-        if (user.balanceReal < tournament.buyIn + tournament.entryFee) throw new Error("Insufficient balance");
-        await db.update(users).set({
-          balanceReal: sql`balanceReal - ${tournament.buyIn + tournament.entryFee}`,
-        }).where(eq(users.id, ctx.user.id));
-
-        await db.insert(transactions).values({
-          userId: ctx.user.id,
-          type: "buy_in",
-          amount: -(tournament.buyIn + tournament.entryFee),
-          status: "completed",
-          note: `Tournament buy-in: ${tournament.name}`,
-        });
-      }
-
-      await db.insert(tournamentEntries).values({
-        tournamentId: input.tournamentId,
-        userId: ctx.user.id,
-        chipStack: tournament.startingChips,
-        status: "registered",
-      });
-
-      await db.update(tournaments).set({
-        currentPlayers: sql`currentPlayers + 1`,
-      }).where(eq(tournaments.id, input.tournamentId));
-
-      return { success: true };
+      const result = await tournamentManager.registerPlayer(input.tournamentId, ctx.user.id);
+      if (!result.success) throw new Error(result.message || "Registration failed");
+      return result;
     }),
 
     unregister: protectedProcedure.input(z.object({
       tournamentId: z.number(),
     })).mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("DB unavailable");
+      const result = await tournamentManager.unregisterPlayer(input.tournamentId, ctx.user.id);
+      if (!result.success) throw new Error(result.message || "Unregister failed");
+      return result;
+    }),
 
-      const [tournament] = await db.select().from(tournaments).where(eq(tournaments.id, input.tournamentId));
-      if (!tournament) throw new Error("Tournament not found");
-      if (tournament.status !== "registering") throw new Error("Cannot unregister after tournament started");
-
-      const existing = await db.select().from(tournamentEntries)
-        .where(and(
-          eq(tournamentEntries.tournamentId, input.tournamentId),
-          eq(tournamentEntries.userId, ctx.user.id)
-        ));
-      if (existing.length === 0) throw new Error("Not registered");
-
-      // Refund buy-in
-      if (tournament.buyIn > 0) {
-        await db.update(users).set({
-          balanceReal: sql`balanceReal + ${tournament.buyIn + tournament.entryFee}`,
-        }).where(eq(users.id, ctx.user.id));
-
-        await db.insert(transactions).values({
-          userId: ctx.user.id,
-          type: "cash_out",
-          amount: tournament.buyIn + tournament.entryFee,
-          status: "completed",
-          note: `Tournament unregister refund: ${tournament.name}`,
-        });
-      }
-
-      await db.delete(tournamentEntries)
-        .where(and(
-          eq(tournamentEntries.tournamentId, input.tournamentId),
-          eq(tournamentEntries.userId, ctx.user.id)
-        ));
-
-      await db.update(tournaments).set({
-        currentPlayers: sql`currentPlayers - 1`,
-      }).where(eq(tournaments.id, input.tournamentId));
-
-      return { success: true };
+    getInfo: publicProcedure.input(z.object({
+      tournamentId: z.number(),
+    })).query(async ({ input }) => {
+      return await tournamentManager.getTournamentInfo(input.tournamentId);
     }),
   }),
 });

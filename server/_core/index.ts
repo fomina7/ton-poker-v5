@@ -6,6 +6,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { gameManager } from "../gameManager";
+import { tournamentManager } from "../TournamentManager";
 
 /**
  * Run database migrations using raw SQL via mysql2.
@@ -264,6 +265,13 @@ async function startServer() {
   // Initialize WebSocket game manager
   gameManager.init(server);
   console.log("[GameManager] WebSocket server initialized");
+  
+  // Initialize Tournament Manager
+  const io = gameManager.getSocketServer();
+  if (io) {
+    tournamentManager.init(io);
+    console.log("[TournamentManager] Tournament manager initialized");
+  }
 
   server.listen(port, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${port}/`);

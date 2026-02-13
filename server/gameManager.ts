@@ -106,12 +106,17 @@ class GameManager {
     const existing = await db.select().from(gameTables);
     if (existing.length === 0) {
       const defaultTables = [
-        { name: "Micro Stakes", smallBlind: 1, bigBlind: 2, minBuyIn: 40, maxBuyIn: 200, tableSize: "6" as const },
-        { name: "Low Stakes", smallBlind: 5, bigBlind: 10, minBuyIn: 200, maxBuyIn: 1000, tableSize: "6" as const },
-        { name: "Medium Stakes", smallBlind: 25, bigBlind: 50, minBuyIn: 1000, maxBuyIn: 5000, tableSize: "6" as const },
-        { name: "High Stakes", smallBlind: 100, bigBlind: 200, minBuyIn: 4000, maxBuyIn: 20000, tableSize: "6" as const },
-        { name: "Heads Up", smallBlind: 10, bigBlind: 20, minBuyIn: 400, maxBuyIn: 2000, tableSize: "2" as const },
-        { name: "Full Ring", smallBlind: 5, bigBlind: 10, minBuyIn: 200, maxBuyIn: 1000, tableSize: "9" as const },
+        // Hold'em tables
+        { name: "Micro Stakes", gameType: "holdem" as const, smallBlind: 1, bigBlind: 2, minBuyIn: 40, maxBuyIn: 200, tableSize: "6" as const },
+        { name: "Low Stakes", gameType: "holdem" as const, smallBlind: 5, bigBlind: 10, minBuyIn: 200, maxBuyIn: 1000, tableSize: "6" as const },
+        { name: "Medium Stakes", gameType: "holdem" as const, smallBlind: 25, bigBlind: 50, minBuyIn: 1000, maxBuyIn: 5000, tableSize: "6" as const },
+        { name: "High Stakes", gameType: "holdem" as const, smallBlind: 100, bigBlind: 200, minBuyIn: 4000, maxBuyIn: 20000, tableSize: "6" as const },
+        { name: "Heads Up", gameType: "holdem" as const, smallBlind: 10, bigBlind: 20, minBuyIn: 400, maxBuyIn: 2000, tableSize: "2" as const },
+        { name: "Full Ring", gameType: "holdem" as const, smallBlind: 5, bigBlind: 10, minBuyIn: 200, maxBuyIn: 1000, tableSize: "9" as const },
+        // Omaha tables
+        { name: "Omaha Micro", gameType: "omaha" as const, smallBlind: 1, bigBlind: 2, minBuyIn: 40, maxBuyIn: 200, tableSize: "6" as const },
+        { name: "Omaha Low", gameType: "omaha" as const, smallBlind: 5, bigBlind: 10, minBuyIn: 200, maxBuyIn: 1000, tableSize: "6" as const },
+        { name: "Omaha Medium", gameType: "omaha" as const, smallBlind: 25, bigBlind: 50, minBuyIn: 1000, maxBuyIn: 5000, tableSize: "6" as const },
       ];
       for (const t of defaultTables) {
         await db.insert(gameTables).values(t);
@@ -162,6 +167,7 @@ class GameManager {
 
       const state: GameState = {
         tableId: data.tableId,
+        gameType: tableConfig.gameType as "holdem" | "omaha",
         phase: "waiting",
         communityCards: [],
         deck: [],
@@ -766,6 +772,11 @@ class GameManager {
         }
       }
     }
+  }
+
+  // ─── Public API ────────────────────────────────────────
+  getSocketServer() {
+    return this.io;
   }
 
   // ─── Helpers ───────────────────────────────────────────

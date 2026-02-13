@@ -40,6 +40,16 @@ export default function Tournaments() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { data: tournamentList, isLoading, refetch } = trpc.tournaments.list.useQuery();
+  const { data: myEntries } = trpc.tournaments.get.useQuery(
+    { id: tournamentList?.[0]?.id || 0 },
+    { enabled: !!tournamentList && tournamentList.length > 0 }
+  );
+
+  // Check if user is registered in a tournament
+  const isRegistered = (tournamentId: number) => {
+    if (!user || !myEntries) return false;
+    return myEntries.entries?.some((e: any) => e.userId === user.id && e.tournamentId === tournamentId) || false;
+  };
 
   const registerMut = trpc.tournaments.register.useMutation({
     onSuccess: () => {
@@ -176,19 +186,35 @@ export default function Tournaments() {
 
                 {/* Action button */}
                 {t.status === 'registering' && isAuthenticated && (
-                  <motion.button
-                    onClick={() => registerMut.mutate({ tournamentId: t.id })}
-                    disabled={registerMut.isPending}
-                    className="w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider"
-                    style={{
-                      fontFamily: "'Orbitron', sans-serif",
-                      background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
-                      color: '#000',
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {registerMut.isPending ? 'REGISTERING...' : t.buyIn === 0 ? 'JOIN FREE' : `REGISTER — ${formatChips(t.buyIn + t.entryFee)}`}
-                  </motion.button>
+                  isRegistered(t.id) ? (
+                    <motion.button
+                      onClick={() => unregisterMut.mutate({ tournamentId: t.id })}
+                      disabled={unregisterMut.isPending}
+                      className="w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider"
+                      style={{
+                        fontFamily: "'Orbitron', sans-serif",
+                        background: 'linear-gradient(135deg, #666 0%, #444 100%)',
+                        color: '#fff',
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {unregisterMut.isPending ? 'UNREGISTERING...' : 'UNREGISTER'}
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      onClick={() => registerMut.mutate({ tournamentId: t.id })}
+                      disabled={registerMut.isPending}
+                      className="w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider"
+                      style={{
+                        fontFamily: "'Orbitron', sans-serif",
+                        background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
+                        color: '#000',
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {registerMut.isPending ? 'REGISTERING...' : t.buyIn === 0 ? 'JOIN FREE' : `REGISTER — ${formatChips(t.buyIn + t.entryFee)}`}
+                    </motion.button>
+                  )
                 )}
 
                 {t.status === 'running' && (
